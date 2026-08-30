@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "pP8VQdgfg_0B8MJd51oH_"
+uri = "file://attached_assets/office-assistant-expo-qr.png"
+type = "image"
+title = "आरोग्य सेवक (MPW) — Expo QR Code"
+description = "हा QR कोड Expo Go अॅपमधून scan करा. Chrome मध्ये उघडू नका."
+logical_id = "76cba5d6-b2c2-4e44-9b3c-8e4f1800c929"
+content_hash = "sha256:5d83cf11f0be932b4d81a9574f15b72d7e370c141ae9cc73040e4db0b18e135a"
+size = 1225
+mtime_ms = 1788110365377
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:39abed97-acd6-492d-b757-dca00b218b8d/76cba5d6-b2c2-4e44-9b3c-8e4f1800c929/e789c21b-2179-46e1-bd0c-c6f7a9d54bdc"
+storage_version_token = "1788110366519329"
+content_type = "image/png"
