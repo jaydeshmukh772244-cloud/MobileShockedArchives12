@@ -18,11 +18,27 @@ export default function HomeScreen() {
   const { entries, people } = useAppData();
   const openItems = entries.filter((entry) => !entry.done).length;
   const completedItems = entries.filter((entry) => entry.done).length;
+  const today = new Date();
+  const dateLabel = new Intl.DateTimeFormat('mr-IN', { day: 'numeric', month: 'short' }).format(today);
+  const weekdayLabel = new Intl.DateTimeFormat('mr-IN', { weekday: 'long' }).format(today);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 118 : insets.bottom + 102 }}>
-        <ScreenHeader eyebrow="आरोग्य सेवक • MPW" title="नमस्कार" subtitle="आजच्या कामावर एक नजर टाका आणि दिवस व्यवस्थित सुरू करा." actionIcon="bell" onAction={() => router.push('/notifications')} />
+        <View style={[styles.appHeader, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 14 }]}>
+          <View style={styles.brandBlock}>
+            <Text style={[styles.brandName, { color: colors.foreground }]}>आरोग्य सेवक <Text style={{ color: colors.primary }}>(MPW)</Text></Text>
+            <Text style={[styles.brandCaption, { color: colors.mutedForeground }]}>दैनंदिन कामकाज</Text>
+          </View>
+          <View style={styles.dateBlock}>
+            <Text style={[styles.dateText, { color: colors.foreground }]}>{dateLabel}</Text>
+            <Text style={[styles.weekdayText, { color: colors.primary }]}>{weekdayLabel}</Text>
+          </View>
+          <Pressable accessibilityRole="button" testID="home-notifications" onPress={() => router.push('/notifications')} style={({ pressed }) => [styles.bellButton, { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}>
+            <Feather name="bell" size={19} color={colors.foreground} />
+          </Pressable>
+        </View>
+        <ScreenHeader compact eyebrow="आजचा डॅशबोर्ड" title="नमस्कार" subtitle="आजच्या कामावर एक नजर टाका आणि दिवस व्यवस्थित सुरू करा." />
         <View style={[styles.focusCard, { backgroundColor: colors.primary }]}>
           <View style={styles.focusCopy}>
             <Text style={styles.focusEyebrow}>आजचा फोकस</Text>
@@ -72,6 +88,14 @@ function QuickAction({ icon, label, onPress, colors }: { icon: keyof typeof Feat
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  appHeader: { paddingHorizontal: 20, paddingBottom: 20, flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brandBlock: { flex: 1, minWidth: 0 },
+  brandName: { fontFamily: 'Inter_700Bold', fontSize: 16, letterSpacing: -0.2 },
+  brandCaption: { fontFamily: 'Inter_400Regular', fontSize: 10, marginTop: 4 },
+  dateBlock: { alignItems: 'flex-end', paddingRight: 2 },
+  dateText: { fontFamily: 'Inter_700Bold', fontSize: 13 },
+  weekdayText: { fontFamily: 'Inter_600SemiBold', fontSize: 11, marginTop: 3 },
+  bellButton: { width: 42, height: 42, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20 },
   focusCard: { marginHorizontal: 20, borderRadius: 24, minHeight: 150, padding: 21, flexDirection: 'row', overflow: 'hidden', marginBottom: 25 },
   focusCopy: { flex: 1, paddingRight: 12 },

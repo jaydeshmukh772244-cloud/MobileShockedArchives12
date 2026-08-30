@@ -10,13 +10,14 @@ interface ScreenHeaderProps {
   subtitle?: string;
   actionIcon?: keyof typeof Feather.glyphMap;
   onAction?: () => void;
+  compact?: boolean;
 }
 
-export function ScreenHeader({ eyebrow, title, subtitle, actionIcon, onAction }: ScreenHeaderProps) {
+export function ScreenHeader({ eyebrow, title, subtitle, actionIcon, onAction, compact = false }: ScreenHeaderProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
-    <View style={[styles.container, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 14 }]}>
+    <View style={[styles.container, { paddingTop: compact ? 0 : Platform.OS === 'web' ? 67 : insets.top + 14 }]}>
       <View style={styles.copy}>
         {eyebrow ? <Text style={[styles.eyebrow, { color: colors.primary }]}>{eyebrow}</Text> : null}
         <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
