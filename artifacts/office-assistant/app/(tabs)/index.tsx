@@ -22,7 +22,7 @@ export default function HomeScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 118 : insets.bottom + 102 }}>
-        <ScreenHeader eyebrow="तुमचा ऑफिस डॅशबोर्ड" title="नमस्कार, अमोल" subtitle="आजच्या कामावर एक नजर टाका आणि दिवस व्यवस्थित सुरू करा." actionIcon="bell" onAction={() => router.push('/notifications')} />
+        <ScreenHeader eyebrow="आरोग्य सेवक • MPW" title="नमस्कार" subtitle="आजच्या कामावर एक नजर टाका आणि दिवस व्यवस्थित सुरू करा." actionIcon="bell" onAction={() => router.push('/notifications')} />
         <View style={[styles.focusCard, { backgroundColor: colors.primary }]}>
           <View style={styles.focusCopy}>
             <Text style={styles.focusEyebrow}>आजचा फोकस</Text>
