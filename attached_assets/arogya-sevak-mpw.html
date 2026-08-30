@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>आरोग्य सेवक (MPW)</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --card: #ffffff;
+      --ink: #172033;
+      --muted: #6b7485;
+      --line: #e2e7f0;
+      --primary: #2f6bff;
+      --primary-soft: #eaf0ff;
+      --green: #178a5a;
+      --green-soft: #e4f7ef;
+      --amber: #9a6100;
+      --amber-soft: #fff2d8;
+      --purple: #7954c8;
+      --purple-soft: #f1eafe;
+      --danger: #d94747;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Noto Sans Devanagari", sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .app { min-height: 100vh; display: flex; }
+    .sidebar {
+      width: 238px; min-height: 100vh; padding: 28px 16px; background: #fff;
+      border-right: 1px solid var(--line); position: sticky; top: 0; height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 30px; }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 14px; background: var(--primary);
+      color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 20px;
+    }
+    .brand strong { display: block; font-size: 14px; line-height: 1.25; }
+    .brand span { display: block; color: var(--muted); font-size: 11px; margin-top: 3px; }
+    .nav { display: grid; gap: 7px; }
+    .nav button {
+      border: 0; background: transparent; color: var(--muted); width: 100%; border-radius: 13px;
+      display: flex; align-items: center; gap: 12px; padding: 12px 13px; text-align: left;
+      font-weight: 650; font-size: 13px;
+    }
+    .nav button:hover, .nav button.active { background: var(--primary-soft); color: var(--primary); }
+    .nav svg { width: 19px; height: 19px; }
+    .side-note {
+      margin-top: auto; border-radius: 16px; padding: 14px; background: var(--ink); color: #fff;
+      font-size: 11px; line-height: 1.6;
+    }
+    .side-note b { display: block; font-size: 12px; margin-bottom: 4px; }
+    main { flex: 1; max-width: 1180px; margin: 0 auto; padding: 42px 46px 70px; width: 100%; }
+    .screen { display: none; }
+    .screen.active { display: block; animation: appear .22s ease-out; }
+    @keyframes appear { from { opacity: .2; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+    .topbar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+    .eyebrow { color: var(--primary); text-transform: uppercase; letter-spacing: 1.1px; font-weight: 800; font-size: 11px; }
+    h1 { font-size: 31px; letter-spacing: -.8px; margin: 7px 0 6px; }
+    h2 { font-size: 18px; margin: 0 0 13px; }
+    .subtitle { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0; }
+    .icon-button {
+      width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--line);
+      background: var(--card); color: var(--ink); display: grid; place-items: center;
+    }
+    .icon-button:hover { border-color: var(--primary); color: var(--primary); }
+    .icon-button svg { width: 19px; height: 19px; }
+    .hero {
+      border-radius: 24px; padding: 26px; color: #fff; background: var(--primary);
+      display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 28px;
+    }
+    .hero small { color: #c9d7ff; font-weight: 750; letter-spacing: .6px; }
+    .hero h2 { font-size: 26px; margin: 10px 0 7px; }
+    .hero p { color: #e6ecff; margin: 0; font-size: 13px; }
+    .hero-mark {
+      width: 68px; height: 68px; border-radius: 22px; background: rgba(255,255,255,.17);
+      display: grid; place-items: center; flex: 0 0 auto;
+    }
+    .hero-mark svg { width: 35px; height: 35px; }
+    .section-title { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 13px; }
+    .section-title h2 { margin: 0; }
+    .link-button { border: 0; background: none; color: var(--primary); font-size: 12px; font-weight: 750; }
+    .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric, .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+    .metric { padding: 15px; min-height: 126px; }
+    .metric-icon { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 13px; }
+    .metric-icon svg { width: 18px; height: 18px; }
+    .blue { background: var(--primary-soft); color: var(--primary); }
+    .green { background: var(--green-soft); color: var(--green); }
+    .amber { background: var(--amber-soft); color: var(--amber); }
+    .purple { background: var(--purple-soft); color: var(--purple); }
+    .metric strong { display: block; font-size: 25px; letter-spacing: -.4px; }
+    .metric span { color: var(--muted); font-size: 12px; display: block; margin-top: 4px; }
+    .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .quick {
+      padding: 15px; border-radius: 16px; background: var(--card); border: 1px solid var(--line);
+      display: flex; align-items: center; gap: 11px; color: var(--ink); font-weight: 700; font-size: 12px;
+    }
+    .quick:hover { border-color: #b7c9ff; transform: translateY(-1px); }
+    .quick-icon { width: 38px; height: 38px; border-radius: 13px; background: var(--primary-soft); color: var(--primary); display: grid; place-items: center; }
+    .quick-icon svg { width: 19px; height: 19px; }
+    .list { overflow: hidden; }
+    .list-row { display: flex; align-items: center; gap: 12px; padding: 15px 16px; border-bottom: 1px solid var(--line); }
+    .list-row:last-child { border-bottom: 0; }
+    .row-icon { width: 35px; height: 35px; border-radius: 12px; display: grid; place-items: center; flex: 0 0 auto; }
+    .row-icon svg { width: 16px; height: 16px; }
+    .row-copy { flex: 1; min-width: 0; }
+    .row-copy strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row-copy small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
+    .empty { padding: 32px 20px; text-align: center; color: var(--muted); font-size: 13px; }
+    .toolbar { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 18px; }
+    .pill {
+      border: 1px solid var(--line); color: var(--muted); background: var(--card); border-radius: 22px;
+      padding: 9px 14px; font-size: 12px; font-weight: 700;
+    }
+    .pill.active { background: var(--primary-soft); color: var(--primary); border-color: #cbd8ff; }
+    .primary-button {
+      border: 0; color: #fff; background: var(--primary); border-radius: 12px; padding: 11px 15px;
+      font-weight: 750; font-size: 13px; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .primary-button:hover { filter: brightness(.96); }
+    .primary-button svg { width: 17px; height: 17px; }
+    .form {
+      padding: 18px; margin-bottom: 18px; background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius); display: grid; gap: 11px;
+    }
+    .form h3 { margin: 0 0 3px; font-size: 16px; }
+    label { color: var(--muted); font-size: 12px; font-weight: 700; display: grid; gap: 6px; }
+    input, textarea, select {
+      width: 100%; border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px;
+      background: var(--bg); color: var(--ink); outline: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    textarea { min-height: 76px; resize: vertical; }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .diary-card { padding: 16px; margin-bottom: 11px; display: flex; gap: 12px; align-items: flex-start; }
+    .check {
+      width: 27px; height: 27px; border: 1.5px solid var(--line); border-radius: 9px; background: var(--bg);
+      display: grid; place-items: center; color: var(--green); flex: 0 0 auto;
+    }
+    .check.done { background: var(--green-soft); border-color: var(--green); }
+    .check svg { width: 15px; height: 15px; }
+    .diary-content { flex: 1; min-width: 0; }
+    .diary-head { display: flex; align-items: flex-start; gap: 8px; }
+    .diary-head strong { flex: 1; font-size: 14px; }
+    .diary-card.done .diary-head strong { color: var(--muted); text-decoration: line-through; }
+    .more { border: 0; background: none; color: var(--muted); padding: 0; }
+    .diary-note { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 6px 0 10px; }
+    .diary-meta { display: flex; align-items: center; gap: 9px; }
+    .tag { color: var(--primary); background: var(--primary-soft); border-radius: 6px; padding: 4px 8px; font-size: 10px; font-weight: 800; }
+    .date { color: var(--muted); font-size: 11px; }
+    .tool-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .tool-tab { border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 13px 8px; color: var(--muted); font-size: 12px; font-weight: 750; display: grid; place-items: center; gap: 5px; }
+    .tool-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .tool-tab svg { width: 18px; height: 18px; }
+    .calc { padding: 20px; max-width: 640px; }
+    .calc h3 { margin: 0; font-size: 19px; }
+    .calc > p { color: var(--muted); font-size: 12px; margin: 6px 0 18px; }
+    .input-line { display: grid; grid-template-columns: 1fr 180px; align-items: center; gap: 16px; margin-bottom: 12px; }
+    .input-line label { font-size: 13px; }
+    .number-input { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 11px; background: var(--bg); overflow: hidden; }
+    .number-input span { padding: 0 0 0 11px; color: var(--muted); font-size: 13px; }
+    .number-input input { border: 0; background: transparent; box-shadow: none; text-align: right; }
+    .result { border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; padding-top: 13px; margin-top: 3px; }
+    .result span { color: var(--muted); font-size: 13px; }
+    .result strong { font-size: 18px; }
+    .result.primary strong { color: var(--primary); }
+    .tip { max-width: 640px; background: var(--amber-soft); color: var(--amber); border-radius: 14px; padding: 13px; font-size: 12px; margin-top: 14px; }
+    .summary { padding: 21px; color: #fff; background: var(--ink); border-radius: 21px; margin-bottom: 25px; max-width: 700px; }
+    .summary-top, .summary-meta { display: flex; justify-content: space-between; align-items: center; }
+    .summary small, .summary-meta { color: #cbd6ef; font-size: 11px; }
+    .summary strong { display: block; font-size: 45px; margin: 13px 0 0; }
+    .progress { height: 8px; background: #3a4761; border-radius: 8px; overflow: hidden; margin-top: 15px; }
+    .progress i { display: block; height: 100%; background: #78a0ff; border-radius: inherit; width: 0; transition: width .25s; }
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 25px; max-width: 700px; }
+    .stat { padding: 15px; }
+    .stat strong { display: block; font-size: 26px; margin-top: 11px; }
+    .stat span { color: var(--muted); font-size: 11px; }
+    .breakdown { max-width: 700px; padding: 17px; }
+    .break-row { margin-bottom: 17px; }
+    .break-row:last-child { margin-bottom: 0; }
+    .break-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 750; margin-bottom: 7px; }
+    .legend { width: 8px; height: 8px; border-radius: 50%; }
+    .bar-line { display: grid; grid-template-columns: 1fr 20px; gap: 10px; align-items: center; }
+    .bar { height: 8px; background: var(--bg); border-radius: 8px; overflow: hidden; }
+    .bar i { display: block; height: 100%; border-radius: inherit; }
+    .bar-line small { color: var(--muted); font-size: 11px; text-align: right; }
+    .person { padding: 14px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .avatar { width: 45px; height: 45px; border-radius: 16px; display: grid; place-items: center; font-size: 19px; font-weight: 800; flex: 0 0 auto; }
+    .person-copy { flex: 1; min-width: 0; }
+    .person-copy strong { display: block; font-size: 14px; }
+    .person-copy small { color: var(--muted); display: block; margin-top: 3px; font-size: 12px; }
+    .phone { color: var(--muted); font-size: 11px; margin-top: 7px; display: block; }
+    .mobile-nav { display: none; }
+    .hide { display: none !important; }
+    @media (max-width: 850px) {
+      .sidebar { width: 205px; }
+      main { padding: 32px 28px 60px; }
+      .metric-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
+      .app { display: block; }
+      .sidebar { display: none; }
+      main { padding: 24px 16px 92px; }
+      .topbar { margin-bottom: 21px; }
+      h1 { font-size: 28px; }
+      .hero { padding: 20px; }
+      .hero h2 { font-size: 22px; }
+      .hero-mark { width: 55px; height: 55px; }
+      .quick-grid { gap: 8px; }
+      .quick { display: grid; justify-items: center; text-align: center; padding: 12px 5px; gap: 7px; }
+      .tool-tabs { gap: 7px; }
+      .input-line { grid-template-columns: 1fr 140px; }
+      .mobile-nav {
+        display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; z-index: 5; bottom: 0; left: 0; right: 0;
+        padding: 8px 5px calc(8px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.96); border-top: 1px solid var(--line);
+      }
+      .mobile-nav button { border: 0; background: none; color: var(--muted); font-size: 10px; display: grid; place-items: center; gap: 4px; font-weight: 700; }
+      .mobile-nav button.active { color: var(--primary); }
+      .mobile-nav svg { width: 20px; height: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">आ</div>
+        <div><strong>आरोग्य सेवक</strong><span>MPW workspace</span></div>
+      </div>
+      <nav class="nav" id="side-nav"></nav>
+      <div class="side-note"><b>आजचा फोकस</b>तुमच्या रोजच्या नोंदी व्यवस्थित ठेवा आणि महिन्याचा आढावा सहज घ्या.</div>
+    </aside>
+    <main>
+      <section class="screen active" id="dashboard"></section>
+      <section class="screen" id="diary"></section>
+      <section class="screen" id="tools"></section>
+      <section class="screen" id="reports"></section>
+      <section class="screen" id="users"></section>
+    </main>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav"></nav>
+
+  <script>
+    const icons = {
+      home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+      book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+      percent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>',
+      report: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="20" x2="5" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="19" y1="20" x2="19" y2="14"/></svg>',
+      users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>',
+      check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>',
+      clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>',
+      clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M8 9h8M8 13h5"/></svg>',
+      edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg>',
+      tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 11 3H4v7l9.59 9.59a2 2 0 0 0 2.82 0l4.18-4.18a2 2 0 0 0 0-2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+      info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+      plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+      more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>',
+      userPlus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>'
+    };
+    const icon = name => icons[name] || '';
+    const today = new Date();
+    const dateKey = offset => {
+      const d = new Date(today); d.setDate(today.getDate() + offset);
+      return d.toISOString().slice(0, 10);
+    };
+    const starter = {
+      entries: [
+        { id: 'e1', title: 'साप्ताहिक टीम मीटिंग', note: 'पुढील आठवड्याची कामांची यादी आणि जबाबदाऱ्या ठरवायच्या.', date: dateKey(0), category: 'मीटिंग', done: false },
+        { id: 'e2', title: 'ग्राहकाला प्रस्ताव पाठवला', note: 'नवीन प्रोजेक्टचा खर्चाचा अंदाज ईमेल केला.', date: dateKey(-1), category: 'फॉलो-अप', done: true },
+        { id: 'e3', title: 'महिन्याचा खर्च तपासला', note: 'ऑफिसचे नियमित खर्च आणि येणे बाकी असलेली रक्कम पाहिली.', date: dateKey(-2), category: 'अकाउंट्स', done: true }
+      ],
+      people: [
+        { id: 'p1', name: 'अमोल देशमुख', role: 'ऑफिस व्यवस्थापक', phone: '98765 43210', kind: 'team' },
+        { id: 'p2', name: 'स्नेहा पाटील', role: 'ग्राहक', phone: '97654 32109', kind: 'customer' }
+      ]
+    };
+    let data = JSON.parse(localStorage.getItem('arogya-sevak-data') || 'null') || starter;
+    let current = 'dashboard';
+    let diaryFilter = 'all';
+    let tool = 'gst';
+    const esc = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    const save = () => localStorage.setItem('arogya-sevak-data', JSON.stringify(data));
+    const formatDate = date => new Intl.DateTimeFormat('mr-IN', { day: 'numeric', month: 'short' }).format(new Date(date + 'T12:00:00'));
+    const navItems = [
+      ['dashboard', 'home', 'मुख्य स्क्रीन'], ['diary', 'book', 'Daily Diary'], ['tools', 'percent', 'Calculators'],
+      ['reports', 'report', 'Monthly Reports'], ['users', 'users', 'Users / Profile']
+    ];
+    function renderNav() {
+      const html = navItems.map(([id, ico, label]) => `<button class="${current === id ? 'active' : ''}" data-screen="${id}">${icon(ico)}<span>${label}</span></button>`).join('');
+      document.querySelector('#side-nav').innerHTML = html;
+      document.querySelector('#mobile-nav').innerHTML = navItems.map(([id, ico, label]) => `<button class="${current === id ? 'active' : ''}" data-screen="${id}">${icon(ico)}<span>${label.split(' ')[0]}</span></button>`).join('');
+    }
+    const header = (eyebrow, title, subtitle, action = '') => `<div class="topbar"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="subtitle">${subtitle}</p></div>${action}</div>`;
+    function dashboard() {
+      const open = data.entries.filter(e => !e.done).length;
+      const done = data.entries.filter(e => e.done).length;
+      return `${header('आरोग्य सेवक • MPW', 'नमस्कार', 'आजच्या कामावर एक नजर टाका आणि दिवस व्यवस्थित सुरू करा.', `<button class="icon-button" data-screen="notifications" title="सूचना">${icon('bell')}</button>`)}
+        <div class="hero"><div><small>आजचा फोकस</small><h2>${open ? open + ' कामं बाकी आहेत' : 'आजची सर्व कामं पूर्ण'}</h2><p>डायरी अपडेट ठेवा, रिपोर्ट तयार करणं आता सोपं आहे.</p></div><div class="hero-mark">${icon('check')}</div></div>
+        <div class="section-title"><h2>आजचा आढावा</h2></div>
+        <div class="metric-grid">
+          <div class="metric"><div class="metric-icon blue">${icon('clipboard')}</div><strong>${open}</strong><span>बाकी कामं</span></div>
+          <div class="metric"><div class="metric-icon green">${icon('check')}</div><strong>${done}</strong><span>पूर्ण कामं</span></div>
+          <div class="metric"><div class="metric-icon purple">${data.people.length}</div><strong>${data.people.length}</strong><span>युजर्स</span></div>
+          <div class="metric"><div class="metric-icon amber">${icon('report')}</div><strong>${data.entries.length}</strong><span>या महिन्यातील नोंदी</span></div>
+        </div>
+        <div class="section-title"><h2>जलद कृती</h2></div>
+        <div class="quick-grid"><button class="quick" data-screen="diary"><span class="quick-icon">${icon('edit')}</span>डायरी नोंद</button><button class="quick" data-screen="tools"><span class="quick-icon">${icon('percent')}</span>कॅल्क्युलेटर</button><button class="quick" data-screen="reports"><span class="quick-icon">${icon('report')}</span>रिपोर्ट</button></div>
+        <div class="section-title"><h2>अलीकडील डायरी</h2><button class="link-button" data-screen="diary">सर्व पहा</button></div>
+        <div class="card list">${data.entries.slice(0, 3).map(e => `<div class="list-row"><span class="row-icon ${e.done ? 'green' : 'blue'}">${icon(e.done ? 'check' : 'clock')}</span><span class="row-copy"><strong>${esc(e.title)}</strong><small>${esc(e.category)} · ${formatDate(e.date)}</small></span></div>`).join('') || '<div class="empty">अजून कोणतीही डायरी नोंद नाही.</div>'}</div>`;
+    }
+    function diary() {
+      const visible = data.entries.filter(e => diaryFilter === 'all' || (diaryFilter === 'done' ? e.done : !e.done));
+      return `${header('दिवसाची नोंद', 'डायरी', 'कामं, भेटी आणि महत्त्वाच्या नोंदी एका जागी ठेवा.', `<button class="primary-button" data-action="toggle-diary-form">${icon('plus')} नवीन नोंद</button>`)}
+        <form class="form hide" id="diary-form"><h3>नवीन डायरी नोंद</h3><label>शीर्षक<input name="title" required placeholder="उदा. ग्राहकाला कॉल करायचा"></label><label>अधिक माहिती<textarea name="note" placeholder="थोडक्यात अधिक माहिती..."></textarea></label><div class="field-grid"><label>कॅटेगरी<select name="category"><option>सामान्य</option><option>मीटिंग</option><option>फॉलो-अप</option><option>अकाउंट्स</option></select></label><label>तारीख<input name="date" type="date" value="${dateKey(0)}"></label></div><button class="primary-button" type="submit">${icon('check')} नोंद जतन करा</button></form>
+        <div class="toolbar"><button class="pill ${diaryFilter === 'all' ? 'active' : ''}" data-filter="all">सर्व ${data.entries.length}</button><button class="pill ${diaryFilter === 'open' ? 'active' : ''}" data-filter="open">बाकी ${data.entries.filter(e => !e.done).length}</button><button class="pill ${diaryFilter === 'done' ? 'active' : ''}" data-filter="done">पूर्ण ${data.entries.filter(e => e.done).length}</button></div>
+        <div>${visible.map(e => `<div class="card diary-card ${e.done ? 'done' : ''}"><button class="check ${e.done ? 'done' : ''}" data-toggle="${e.id}" title="पूर्ण करा">${e.done ? icon('check') : ''}</button><div class="diary-content"><div class="diary-head"><strong>${esc(e.title)}</strong><button class="more" data-delete-entry="${e.id}" title="हटवा">${icon('more')}</button></div><p class="diary-note">${esc(e.note)}</p><div class="diary-meta"><span class="tag">${esc(e.category)}</span><span class="date">${formatDate(e.date)}</span></div></div></div>`).join('') || '<div class="card empty">या फिल्टरमध्ये कोणतीही नोंद नाही.</div>'}</div>`;
+    }
+    function tools() {
+      const amount = Number(document.querySelector('#amount')?.value || 1000);
+      const gst = Number(document.querySelector('#gst')?.value || 18);
+      const percent = Number(document.querySelector('#percent')?.value || 10);
+      const hours = Number(document.querySelector('#hours')?.value || 8);
+      const minutes = Number(document.querySelector('#minutes')?.value || 30);
+      return `${header('ऑफिस टूल्स', 'कॅल्क्युलेटर', 'नेहमी लागणाऱ्या गणना काही सेकंदांत करा.')}
+        <div class="tool-tabs">${[['gst','tag','GST'],['percent','percent','टक्केवारी'],['hours','clock','वेळ']].map(x => `<button class="tool-tab ${tool === x[0] ? 'active' : ''}" data-tool="${x[0]}">${icon(x[1])}${x[2]}</button>`).join('')}</div>
+        <div class="card calc"><h3>${tool === 'gst' ? 'GST कॅल्क्युलेटर' : tool === 'percent' ? 'टक्केवारी कॅल्क्युलेटर' : 'कामाचा वेळ'}</h3><p>${tool === 'gst' ? 'करासहित अंतिम रक्कम पटकन काढा.' : tool === 'percent' ? 'सूट, कमिशन किंवा वाढीची रक्कम शोधा.' : 'तास आणि मिनिटं एकत्र करून एकूण वेळ पहा.'}</p>
+        ${tool === 'gst' ? `<div class="input-line"><label>मूळ रक्कम<div class="number-input"><span>₹</span><input id="amount" type="number" value="${amount}" min="0"></div></label><label>GST दर<div class="number-input"><input id="gst" type="number" value="${gst}" min="0"><span>%</span></div></label></div><div class="result"><span>GST रक्कम</span><strong>₹${(amount * gst / 100).toFixed(2)}</strong></div><div class="result primary"><span>अंतिम रक्कम</span><strong>₹${(amount + amount * gst / 100).toFixed(2)}</strong></div>` : tool === 'percent' ? `<div class="input-line"><label>मूळ रक्कम<div class="number-input"><span>₹</span><input id="amount" type="number" value="${amount}" min="0"></div></label><label>टक्केवारी<div class="number-input"><input id="percent" type="number" value="${percent}" min="0"><span>%</span></div></label></div><div class="result primary"><span>${percent}% रक्कम</span><strong>₹${(amount * percent / 100).toFixed(2)}</strong></div><div class="result"><span>टक्केवारीनंतर एकूण</span><strong>₹${(amount + amount * percent / 100).toFixed(2)}</strong></div>` : `<div class="input-line"><label>तास<div class="number-input"><input id="hours" type="number" value="${hours}" min="0"><span>तास</span></div></label><label>मिनिटं<div class="number-input"><input id="minutes" type="number" value="${minutes}" min="0" max="59"><span>मिनिटं</span></div></label></div><div class="result primary"><span>एकूण वेळ</span><strong>${(hours + minutes / 60).toFixed(2)} तास</strong></div>`}</div><div class="tip">${icon('info')} रक्कम किंवा दर बदलला की निकाल आपोआप अपडेट होतो.</div>`;
+    }
+    function reports() {
+      const done = data.entries.filter(e => e.done).length, total = data.entries.length, completion = total ? Math.round(done / total * 100) : 0;
+      const names = ['मीटिंग', 'फॉलो-अप', 'अकाउंट्स', 'सामान्य'], colors = ['#2f6bff', '#ffb547', '#20a875', '#8d6be8'];
+      const counts = names.map(n => data.entries.filter(e => e.category === n).length), max = Math.max(...counts, 1);
+      return `${header('मासिक सारांश', 'रिपोर्ट', 'तुमच्या ऑफिसच्या प्रगतीचा साधा आणि स्पष्ट आढावा.')}
+        <div class="summary"><div class="summary-top"><small>या महिन्याचा सारांश</small>${icon('report')}</div><strong>${completion}%</strong><small>काम पूर्ण होण्याचा दर</small><div class="progress"><i style="width:${Math.max(completion, 3)}%"></i></div><div class="summary-meta"><span>${done} पूर्ण</span><span>${total - done} बाकी</span></div></div>
+        <div class="section-title"><h2>या महिन्याची आकडेवारी</h2></div><div class="stats"><div class="card stat"><div class="metric-icon blue">${icon('book')}</div><strong>${total}</strong><span>डायरी नोंदी</span></div><div class="card stat"><div class="metric-icon purple">${icon('users')}</div><strong>${data.people.length}</strong><span>युजर्स</span></div></div>
+        <div class="section-title"><h2>कामाचं विभाजन</h2></div><div class="card breakdown">${names.map((n, i) => `<div class="break-row"><div class="break-label"><i class="legend" style="background:${colors[i]}"></i>${n}</div><div class="bar-line"><div class="bar"><i style="width:${counts[i] / max * 100}%;background:${colors[i]}"></i></div><small>${counts[i]}</small></div></div>`).join('')}</div>`;
+    }
+    function users() {
+      return `${header('लोक आणि संपर्क', 'युजर्स', 'टीम आणि ग्राहकांची बेसिक माहिती सहज सांभाळा.', `<button class="primary-button" data-action="toggle-user-form">${icon('userPlus')} नवीन युजर</button>`)}
+        <form class="form hide" id="user-form"><h3>नवीन युजर</h3><div class="field-grid"><label>पूर्ण नाव<input name="name" required placeholder="पूर्ण नाव"></label><label>भूमिका / कंपनी<input name="role" required placeholder="भूमिका / कंपनी"></label></div><div class="field-grid"><label>फोन नंबर<input name="phone" placeholder="फोन नंबर"></label><label>प्रकार<select name="kind"><option value="team">टीम सदस्य</option><option value="customer">ग्राहक</option></select></label></div><button class="primary-button" type="submit">${icon('userPlus')} युजर जतन करा</button></form>
+        <div class="card" style="padding:13px 15px;margin-bottom:14px;background:var(--primary-soft);border-color:transparent;color:var(--ink)">${icon('users')} <b style="font-size:12px;margin-left:7px">${data.people.length} युजर्स नोंदवले आहेत</b></div>
+        ${data.people.map(p => `<div class="card person"><div class="avatar ${p.kind === 'team' ? 'blue' : 'amber'}">${esc(p.name.slice(0, 1))}</div><div class="person-copy"><strong>${esc(p.name)}</strong><small>${esc(p.role)} · ${p.kind === 'team' ? 'टीम सदस्य' : 'ग्राहक'}</small><span class="phone">${esc(p.phone || 'फोन नंबर नाही')}</span></div><button class="more" data-delete-person="${p.id}" title="हटवा">${icon('more')}</button></div>`).join('')}`;
+    }
+    function render() {
+      document.querySelector('#dashboard').innerHTML = dashboard();
+      document.querySelector('#diary').innerHTML = diary();
+      document.querySelector('#tools').innerHTML = tools();
+      document.querySelector('#reports').innerHTML = reports();
+      document.querySelector('#users').innerHTML = users();
+      document.querySelectorAll('.screen').forEach(el => el.classList.toggle('active', el.id === current));
+      renderNav();
+    }
+    function showForm(id) { document.querySelector(id)?.classList.toggle('hide'); }
+    document.addEventListener('click', event => {
+      const screen = event.target.closest('[data-screen]')?.dataset.screen;
+      if (screen && ['dashboard','diary','tools','reports','users'].includes(screen)) { current = screen; render(); return; }
+      const filter = event.target.closest('[data-filter]')?.dataset.filter;
+      if (filter) { diaryFilter = filter; render(); return; }
+      const toolName = event.target.closest('[data-tool]')?.dataset.tool;
+      if (toolName) { tool = toolName; render(); return; }
+      const toggle = event.target.closest('[data-toggle]')?.dataset.toggle;
+      if (toggle) { data.entries = data.entries.map(e => e.id === toggle ? {...e, done: !e.done} : e); save(); render(); return; }
+      const delEntry = event.target.closest('[data-delete-entry]')?.dataset.deleteEntry;
+      if (delEntry && confirm('ही डायरी नोंद हटवायची आहे का?')) { data.entries = data.entries.filter(e => e.id !== delEntry); save(); render(); return; }
+      const delPerson = event.target.closest('[data-delete-person]')?.dataset.deletePerson;
+      if (delPerson && confirm('हा युजर हटवायचा आहे का?')) { data.people = data.people.filter(p => p.id !== delPerson); save(); render(); return; }
+      if (event.target.closest('[data-action="toggle-diary-form"]')) { showForm('#diary-form'); return; }
+      if (event.target.closest('[data-action="toggle-user-form"]')) { showForm('#user-form'); return; }
+    });
+    document.addEventListener('input', event => {
+      if (current === 'tools' && ['amount','gst','percent','hours','minutes'].includes(event.target.id)) {
+        const values = Object.fromEntries(['amount','gst','percent','hours','minutes'].map(id => [id, document.querySelector('#' + id)?.value || '0']));
+        document.querySelector('#tools').innerHTML = toolsFromValues(values);
+        renderNav();
+      }
+    });
+    function toolsFromValues(values) {
+      const old = ['amount','gst','percent','hours','minutes'].map(id => document.querySelector('#' + id)?.value);
+      const temp = document.querySelector('#tools');
+      const savedTool = tool;
+      const html = tools();
+      return html.replace(/value="(1000|18|10|8|30)"/g, (m, n) => m);
+    }
+    document.addEventListener('submit', event => {
+      if (event.target.id === 'diary-form') {
+        event.preventDefault(); const form = new FormData(event.target);
+        data.entries.unshift({ id: 'e' + Date.now(), title: form.get('title'), note: form.get('note') || 'अतिरिक्त माहिती नाही.', date: form.get('date') || dateKey(0), category: form.get('category'), done: false });
+        save(); render(); current = 'diary'; render();
+      }
+      if (event.target.id === 'user-form') {
+        event.preventDefault(); const form = new FormData(event.target);
+        data.people.unshift({ id: 'p' + Date.now(), name: form.get('name'), role: form.get('role'), phone: form.get('phone') || 'फोन नंबर नाही', kind: form.get('kind') });
+        save(); current = 'users'; render();
+      }
+    });
+    render();
+  </script>
+</body>
+</html>

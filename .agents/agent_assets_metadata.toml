@@ -14,3 +14,17 @@ mtime_ms = 1788110365377
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:39abed97-acd6-492d-b757-dca00b218b8d/76cba5d6-b2c2-4e44-9b3c-8e4f1800c929/e789c21b-2179-46e1-bd0c-c6f7a9d54bdc"
 storage_version_token = "1788110366519329"
 content_type = "image/png"
+
+[[outputs]]
+id = "ZpG-3OF-0K4TEUwCmBe41"
+uri = "file://attached_assets/arogya-sevak-mpw.html"
+type = "text"
+title = "आरोग्य सेवक (MPW) — HTML Code"
+description = "सध्याच्या अॅपसारखी चालणारी standalone HTML फाइल. Browser मध्ये उघडा किंवा download करून वापरा."
+logical_id = "f4d82da3-a98a-4114-a761-a37e01bf6e1d"
+content_hash = "sha256:c79abf2c73243f5dbc8cf2fa52ae854d47a9fe3af63abb3d109adac1cab21dff"
+size = 37791
+mtime_ms = 1788110834210
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:39abed97-acd6-492d-b757-dca00b218b8d/f4d82da3-a98a-4114-a761-a37e01bf6e1d/435d36b8-c570-4efb-814e-de7c1d985969"
+storage_version_token = "1788110855242178"
+content_type = "text/html"
