@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "Office Assistant"
+description = "A practical office mobile app for teams and customers to manage user information, daily diary entries, work calculators, and monthly reports in one place."
+version = "1.0.0"
+id = "artifacts/office-assistant"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 21653
+
+[services.development]
+run = "pnpm --filter @workspace/office-assistant run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/office-assistant", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/office-assistant", "run", "serve" ]
+
+[services.env]
+PORT = "21653"
+BASE_PATH = "/"

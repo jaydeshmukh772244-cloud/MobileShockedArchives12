@@ -1,0 +1,1 @@
+- [Expo web preview layout](expo-web-preview-layout.md) — the root gesture handler must fill the viewport for the web preview to render.
