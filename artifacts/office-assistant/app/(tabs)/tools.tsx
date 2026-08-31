@@ -80,19 +80,19 @@ export default function ToolsScreen() {
               <ResultRow label="एकूण वेळ" value={`${result.time.toFixed(2)} तास`} primary colors={colors} />
             </CalculatorCard>
           ) : (
-            <CalculatorCard title="HI / CI / BI Index" description="दूषित कंटेनरच्या सर्वेक्षणाचे तीन महत्त्वाचे निर्देशांक काढा." colors={colors}>
+            <CalculatorCard title="HI / CI / BI Index" description="डास अळ्यांच्या सर्वेक्षणाचे तीन महत्त्वाचे निर्देशांक काढा." colors={colors}>
               <InputRow label="तपासलेली घरे" value={housesInspected} onChangeText={setHousesInspected} suffix="घरे" colors={colors} />
-              <InputRow label="दूषित कंटेनर असलेली घरे" value={positiveHouses} onChangeText={setPositiveHouses} suffix="घरे" colors={colors} />
+              <InputRow label="अळ्या असलेली घरे" value={positiveHouses} onChangeText={setPositiveHouses} suffix="घरे" colors={colors} />
               <InputRow label="तपासलेले कंटेनर" value={containersInspected} onChangeText={setContainersInspected} suffix="कंटेनर" colors={colors} />
-              <InputRow label="दूषित कंटेनर" value={positiveContainers} onChangeText={setPositiveContainers} suffix="कंटेनर" colors={colors} />
-              {result.invalidIndices ? <Text style={[styles.validationText, { color: colors.destructive }]}>दूषित कंटेनर असलेल्या घरांची किंवा दूषित कंटेनरची संख्या तपासलेल्या संख्येपेक्षा जास्त असू शकत नाही.</Text> : null}
+              <InputRow label="अळ्या असलेले कंटेनर" value={positiveContainers} onChangeText={setPositiveContainers} suffix="कंटेनर" colors={colors} />
+              {result.invalidIndices ? <Text style={[styles.validationText, { color: colors.destructive }]}>अळ्या असलेली संख्या तपासलेल्या संख्येपेक्षा जास्त असू शकत नाही.</Text> : null}
               <ResultRow label="HI Index" value={result.invalidIndices ? '—' : `${result.hi.toFixed(2)}%`} primary colors={colors} />
               <ResultRow label="CI Index" value={result.invalidIndices ? '—' : `${result.ci.toFixed(2)}%`} colors={colors} />
               <ResultRow label="BI Index" value={result.invalidIndices ? '—' : result.bi.toFixed(2)} colors={colors} />
               <View style={[styles.formulaNote, { backgroundColor: colors.secondary }]}>
-                <Text style={[styles.formulaText, { color: colors.foreground }]}>HI = दूषित कंटेनर असलेली घरे ÷ तपासलेली घरे × 100</Text>
-                <Text style={[styles.formulaText, { color: colors.foreground }]}>CI = दूषित कंटेनर ÷ तपासलेले कंटेनर × 100</Text>
-                <Text style={[styles.formulaText, { color: colors.foreground }]}>BI = दूषित कंटेनर ÷ तपासलेली घरे × 100</Text>
+                <Text style={[styles.formulaText, { color: colors.foreground }]}>HI = अळ्या असलेली घरे ÷ तपासलेली घरे × 100</Text>
+                <Text style={[styles.formulaText, { color: colors.foreground }]}>CI = अळ्या असलेले कंटेनर ÷ तपासलेले कंटेनर × 100</Text>
+                <Text style={[styles.formulaText, { color: colors.foreground }]}>BI = अळ्या असलेले कंटेनर ÷ तपासलेली घरे × 100</Text>
               </View>
             </CalculatorCard>
           )}
