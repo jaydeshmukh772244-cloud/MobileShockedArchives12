@@ -56,6 +56,7 @@ interface AppDataContextValue {
   toggleEntry: (id: string) => void;
   removeEntry: (id: string) => void;
   addDeathReport: (report: Omit<DeathReportEntry, 'id'>) => void;
+  updateDeathReport: (id: string, report: Omit<DeathReportEntry, 'id'>) => void;
   removeDeathReport: (id: string) => void;
   updateReportPeriod: (period: ReportPeriod) => void;
   updateProfile: (profile: Profile) => void;
@@ -206,6 +207,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         ),
       removeEntry: (id) => setEntries((current) => current.filter((entry) => entry.id !== id)),
       addDeathReport: (report) => setDeathReports((current) => [...current, { ...report, id: makeId('death') }]),
+      updateDeathReport: (id, report) => setDeathReports((current) => current.map((entry) => (entry.id === id ? { ...report, id } : entry))),
       removeDeathReport: (id) => setDeathReports((current) => current.filter((report) => report.id !== id)),
       updateReportPeriod: (period) => setReportPeriod(period),
       updateProfile: (nextProfile) => setProfile(nextProfile),
