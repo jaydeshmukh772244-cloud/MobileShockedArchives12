@@ -32,6 +32,11 @@ export interface DeathReportEntry {
   remark: string;
 }
 
+export interface ReportPeriod {
+  month: number;
+  year: number;
+}
+
 export interface DiaryEntry {
   id: string;
   title: string;
@@ -45,12 +50,14 @@ interface AppDataContextValue {
   profile: Profile;
   entries: DiaryEntry[];
   deathReports: DeathReportEntry[];
+  reportPeriod: ReportPeriod;
   hydrated: boolean;
   addEntry: (entry: Omit<DiaryEntry, 'id' | 'date'> & { date?: string }) => void;
   toggleEntry: (id: string) => void;
   removeEntry: (id: string) => void;
   addDeathReport: (report: Omit<DeathReportEntry, 'id'>) => void;
   removeDeathReport: (id: string) => void;
+  updateReportPeriod: (period: ReportPeriod) => void;
   updateProfile: (profile: Profile) => void;
 }
 
@@ -67,6 +74,12 @@ const emptyProfile: Profile = {
   bsCode: '',
   phone: '',
   gmail: '',
+};
+
+const currentDate = new Date();
+const defaultReportPeriod: ReportPeriod = {
+  month: currentDate.getMonth() + 1,
+  year: currentDate.getFullYear(),
 };
 
 const today = new Date();
@@ -112,6 +125,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [entries, setEntries] = useState<DiaryEntry[]>(starterEntries);
   const [deathReports, setDeathReports] = useState<DeathReportEntry[]>([]);
+  const [reportPeriod, setReportPeriod] = useState<ReportPeriod>(defaultReportPeriod);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -124,6 +138,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             people?: Array<{ name: string; role: string; phone: string; email?: string; kind?: string }>;
             entries?: DiaryEntry[];
             deathReports?: DeathReportEntry[];
+            reportPeriod?: ReportPeriod;
           };
           if (saved.profile) {
             setProfile({
@@ -151,6 +166,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           }
           if (Array.isArray(saved.entries)) setEntries(saved.entries);
           if (Array.isArray(saved.deathReports)) setDeathReports(saved.deathReports);
+          if (saved.reportPeriod && Number.isInteger(saved.reportPeriod.month) && saved.reportPeriod.month >= 1 && saved.reportPeriod.month <= 12 && Number.isInteger(saved.reportPeriod.year)) {
+            setReportPeriod(saved.reportPeriod);
+          }
         }
       } catch {
         // The in-memory starter data remains usable if storage is unavailable.
@@ -163,14 +181,15 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries, deathReports }));
-  }, [profile, entries, deathReports, hydrated]);
+    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries, deathReports, reportPeriod }));
+  }, [profile, entries, deathReports, reportPeriod, hydrated]);
 
   const value = useMemo<AppDataContextValue>(
     () => ({
       profile,
       entries,
       deathReports,
+      reportPeriod,
       hydrated,
       addEntry: (entry) =>
         setEntries((current) => [
@@ -188,9 +207,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       removeEntry: (id) => setEntries((current) => current.filter((entry) => entry.id !== id)),
       addDeathReport: (report) => setDeathReports((current) => [...current, { ...report, id: makeId('death') }]),
       removeDeathReport: (id) => setDeathReports((current) => current.filter((report) => report.id !== id)),
+      updateReportPeriod: (period) => setReportPeriod(period),
       updateProfile: (nextProfile) => setProfile(nextProfile),
     }),
-    [deathReports, entries, hydrated, profile],
+    [deathReports, entries, hydrated, profile, reportPeriod],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

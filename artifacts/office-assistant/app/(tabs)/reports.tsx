@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
@@ -10,7 +10,7 @@ import { useColors } from '@/hooks/useColors';
 export default function ReportsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { profile, deathReports, addDeathReport, removeDeathReport } = useAppData();
+  const { profile, deathReports, addDeathReport, removeDeathReport, reportPeriod, updateReportPeriod } = useAppData();
   const [showForm, setShowForm] = useState(false);
   const [personName, setPersonName] = useState('');
   const [age, setAge] = useState('');
@@ -20,8 +20,16 @@ export default function ReportsScreen() {
   const [deathDate, setDeathDate] = useState('');
   const [cause, setCause] = useState('');
   const [remark, setRemark] = useState('');
+  const [showPeriodEditor, setShowPeriodEditor] = useState(false);
+  const [periodMonth, setPeriodMonth] = useState(String(reportPeriod.month));
+  const [periodYear, setPeriodYear] = useState(String(reportPeriod.year));
 
-  const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date());
+  useEffect(() => {
+    setPeriodMonth(String(reportPeriod.month));
+    setPeriodYear(String(reportPeriod.year));
+  }, [reportPeriod]);
+
+  const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(reportPeriod.year, reportPeriod.month - 1, 1));
 
   const resetForm = () => {
     setPersonName('');
@@ -54,6 +62,17 @@ export default function ReportsScreen() {
     setShowForm(false);
   };
 
+  const saveReportPeriod = () => {
+    const month = Number(periodMonth);
+    const year = Number(periodYear);
+    if (!Number.isInteger(month) || month < 1 || month > 12 || !Number.isInteger(year) || year < 1900 || year > 2200) {
+      Alert.alert('चुकीची तारीख', 'महिना 1 ते 12 आणि योग्य वर्ष भरा.');
+      return;
+    }
+    updateReportPeriod({ month, year });
+    setShowPeriodEditor(false);
+  };
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <KeyboardAwareScrollViewCompat bottomOffset={20} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 118 : insets.bottom + 100 }}>
@@ -75,7 +94,18 @@ export default function ReportsScreen() {
             <View style={[styles.reportTitleRule, { borderTopColor: colors.border }]} />
             <Text style={[styles.reportTitle, { color: colors.foreground }]}>मृत्यू अहवाल</Text>
             <Text style={[styles.reportSubtitle, { color: colors.mutedForeground }]}>{deathReports.length} नोंदी या महिन्यात</Text>
+            <Pressable onPress={() => setShowPeriodEditor((value) => !value)} style={({ pressed }) => [styles.periodButton, { borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}>
+              <Feather name="calendar" size={14} color={colors.primary} />
+              <Text style={[styles.periodButtonText, { color: colors.primary }]}>महिना / वर्ष बदला</Text>
+            </Pressable>
           </View>
+          {showPeriodEditor ? <View style={[styles.periodEditor, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.twoColumns}>
+              <View style={styles.column}><FormField label="महिना (1-12)" value={periodMonth} onChangeText={setPeriodMonth} placeholder="उदा. 8" keyboardType="number-pad" colors={colors} /></View>
+              <View style={styles.column}><FormField label="वर्ष" value={periodYear} onChangeText={setPeriodYear} placeholder="उदा. 2026" keyboardType="number-pad" colors={colors} /></View>
+            </View>
+            <Pressable onPress={saveReportPeriod} style={({ pressed }) => [styles.periodSaveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Text style={styles.saveText}>Period जतन करा</Text></Pressable>
+          </View> : null}
           {showForm ? <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.formHeading}><View><Text style={[styles.formTitle, { color: colors.foreground }]}>नवीन मृत्यू नोंद</Text><Text style={[styles.formHint, { color: colors.mutedForeground }]}>अहवालातील पुढील क्रमांकासाठी माहिती भरा.</Text></View><Feather name="edit-3" size={18} color={colors.primary} /></View>
             <FormField label="मृत व्यक्तीचे नाव *" value={personName} onChangeText={setPersonName} placeholder="पूर्ण नाव" colors={colors} />
@@ -152,6 +182,10 @@ const styles = StyleSheet.create({
   reportTitleRule: { borderTopWidth: 1, marginTop: 13 },
   reportTitle: { fontFamily: 'Inter_700Bold', fontSize: 18, textAlign: 'center', marginTop: 12 },
   reportSubtitle: { fontFamily: 'Inter_400Regular', fontSize: 11, textAlign: 'center', marginTop: 4 },
+  periodButton: { height: 34, borderRadius: 10, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 13 },
+  periodButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 10 },
+  periodEditor: { borderRadius: 17, borderWidth: 1, padding: 14, marginTop: -8, marginBottom: 18 },
+  periodSaveButton: { height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', marginTop: -2 },
   formCard: { borderRadius: 19, borderWidth: 1, padding: 16, marginBottom: 18 },
   formHeading: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 15 },
   formTitle: { fontFamily: 'Inter_700Bold', fontSize: 17 },
