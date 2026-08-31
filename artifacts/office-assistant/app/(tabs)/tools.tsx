@@ -8,38 +8,73 @@ import { useColors } from '@/hooks/useColors';
 
 const numberValue = (value: string) => Number(value.replace(',', '.')) || 0;
 
+const parseDate = (value: string) => {
+  const parts = value.trim().split(/[./-]/).map(Number);
+  if (parts.length !== 3 || parts.some((part) => !Number.isInteger(part))) return null;
+  const [day, month, inputYear] = parts;
+  const year = inputYear < 100 ? 2000 + inputYear : inputYear;
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day ? date : null;
+};
+
+const addDays = (date: Date, days: number) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+const formatDate = (date: Date | null) =>
+  date ? new Intl.DateTimeFormat('mr-IN', { day: 'numeric', month: 'long', year: 'numeric' }).format(date) : '';
+
+const ageText = (date: Date | null) => {
+  if (!date) return '';
+  const today = new Date();
+  let years = today.getFullYear() - date.getFullYear();
+  let months = today.getMonth() - date.getMonth();
+  let days = today.getDate() - date.getDate();
+  if (days < 0) {
+    months -= 1;
+    days += new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  return `${years} वर्षे ${months} महिने ${days} दिवस`;
+};
+
 export default function ToolsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const [active, setActive] = useState<'gst' | 'percent' | 'hours' | 'indices'>('gst');
-  const [amount, setAmount] = useState('1000');
-  const [gst, setGst] = useState('18');
-  const [percent, setPercent] = useState('10');
-  const [hours, setHours] = useState('8');
-  const [minutes, setMinutes] = useState('30');
+  const [active, setActive] = useState<'indices' | 'age' | 'lmp' | 'edd'>('indices');
   const [housesInspected, setHousesInspected] = useState('');
   const [positiveHouses, setPositiveHouses] = useState('');
   const [containersInspected, setContainersInspected] = useState('');
   const [positiveContainers, setPositiveContainers] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [lmpDate, setLmpDate] = useState('');
+  const [eddDate, setEddDate] = useState('');
   const result = useMemo(() => {
-    const base = numberValue(amount);
-    const tax = base * numberValue(gst) / 100;
-    const p = base * numberValue(percent) / 100;
     const houses = numberValue(housesInspected);
     const positiveHouseCount = numberValue(positiveHouses);
     const containers = numberValue(containersInspected);
     const positiveContainerCount = numberValue(positiveContainers);
+    const birthDate = parseDate(dateOfBirth);
+    const lastMenstrualPeriod = parseDate(lmpDate);
+    const expectedDueDate = parseDate(eddDate);
     return {
-      tax,
-      total: base + tax,
-      percentage: p,
-      time: numberValue(hours) + numberValue(minutes) / 60,
       hi: houses > 0 ? (positiveHouseCount / houses) * 100 : 0,
       ci: containers > 0 ? (positiveContainerCount / containers) * 100 : 0,
       bi: houses > 0 ? (positiveContainerCount / houses) * 100 : 0,
       invalidIndices: positiveHouseCount > houses || positiveContainerCount > containers,
+      age: ageText(birthDate),
+      invalidBirthDate: dateOfBirth.trim().length > 0 && !birthDate,
+      calculatedLmp: formatDate(expectedDueDate ? addDays(expectedDueDate, -280) : null),
+      invalidLmpDate: lmpDate.trim().length > 0 && !lastMenstrualPeriod,
+      calculatedEdd: formatDate(lastMenstrualPeriod ? addDays(lastMenstrualPeriod, 280) : null),
+      invalidEddDate: eddDate.trim().length > 0 && !expectedDueDate,
     };
-  }, [amount, gst, percent, hours, minutes, housesInspected, positiveHouses, containersInspected, positiveContainers]);
+  }, [housesInspected, positiveHouses, containersInspected, positiveContainers, dateOfBirth, lmpDate, eddDate]);
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -48,10 +83,10 @@ export default function ToolsScreen() {
         <View style={styles.body}>
           <View style={styles.toolTabs}>
             {[
-              { key: 'gst' as const, icon: 'tag' as const, label: 'GST' },
-              { key: 'percent' as const, icon: 'percent' as const, label: 'टक्केवारी' },
-              { key: 'hours' as const, icon: 'clock' as const, label: 'वेळ' },
               { key: 'indices' as const, icon: 'activity' as const, label: 'HI/CI/BI' },
+              { key: 'age' as const, icon: 'user' as const, label: 'Age' },
+              { key: 'lmp' as const, icon: 'calendar' as const, label: 'LMP' },
+              { key: 'edd' as const, icon: 'calendar' as const, label: 'EDD' },
             ].map((item) => (
               <Pressable key={item.key} onPress={() => setActive(item.key)} style={[styles.toolTab, { backgroundColor: active === item.key ? colors.primary : colors.card, borderColor: active === item.key ? colors.primary : colors.border }]}>
                 <Feather name={item.icon} size={17} color={active === item.key ? '#FFFFFF' : colors.mutedForeground} />
@@ -59,27 +94,7 @@ export default function ToolsScreen() {
               </Pressable>
             ))}
           </View>
-          {active === 'gst' ? (
-            <CalculatorCard title="GST कॅल्क्युलेटर" description="करासहित अंतिम रक्कम पटकन काढा." colors={colors}>
-              <InputRow label="मूळ रक्कम" value={amount} onChangeText={setAmount} prefix="₹" colors={colors} />
-              <InputRow label="GST दर" value={gst} onChangeText={setGst} suffix="%" colors={colors} />
-              <ResultRow label="GST रक्कम" value={`₹${result.tax.toFixed(2)}`} colors={colors} />
-              <ResultRow label="अंतिम रक्कम" value={`₹${result.total.toFixed(2)}`} primary colors={colors} />
-            </CalculatorCard>
-          ) : active === 'percent' ? (
-            <CalculatorCard title="टक्केवारी कॅल्क्युलेटर" description="सूट, कमिशन किंवा वाढीची रक्कम शोधा." colors={colors}>
-              <InputRow label="मूळ रक्कम" value={amount} onChangeText={setAmount} prefix="₹" colors={colors} />
-              <InputRow label="टक्केवारी" value={percent} onChangeText={setPercent} suffix="%" colors={colors} />
-              <ResultRow label={`${percent || '0'}% रक्कम`} value={`₹${result.percentage.toFixed(2)}`} primary colors={colors} />
-              <ResultRow label="टक्केवारीनंतर एकूण" value={`₹${(numberValue(amount) + result.percentage).toFixed(2)}`} colors={colors} />
-            </CalculatorCard>
-          ) : active === 'hours' ? (
-            <CalculatorCard title="कामाचा वेळ" description="तास आणि मिनिटं एकत्र करून एकूण वेळ पहा." colors={colors}>
-              <InputRow label="तास" value={hours} onChangeText={setHours} suffix="तास" colors={colors} />
-              <InputRow label="मिनिटं" value={minutes} onChangeText={setMinutes} suffix="मिनिटं" colors={colors} />
-              <ResultRow label="एकूण वेळ" value={`${result.time.toFixed(2)} तास`} primary colors={colors} />
-            </CalculatorCard>
-          ) : (
+          {active === 'indices' ? (
             <CalculatorCard title="HI / CI / BI Index" description="डास अळ्यांच्या सर्वेक्षणाचे तीन महत्त्वाचे निर्देशांक काढा." colors={colors}>
               <InputRow label="तपासलेली घरे" value={housesInspected} onChangeText={setHousesInspected} suffix="घरे" colors={colors} />
               <InputRow label="अळ्या असलेली घरे" value={positiveHouses} onChangeText={setPositiveHouses} suffix="घरे" colors={colors} />
@@ -95,10 +110,34 @@ export default function ToolsScreen() {
                 <Text style={[styles.formulaText, { color: colors.foreground }]}>BI = अळ्या असलेले कंटेनर ÷ तपासलेली घरे × 100</Text>
               </View>
             </CalculatorCard>
+          ) : active === 'age' ? (
+            <CalculatorCard title="Age कॅल्क्युलेटर" description="जन्मतारखेवरून वय वर्षे, महिने आणि दिवसांत काढा." colors={colors}>
+              <DateInputRow label="जन्मतारीख" value={dateOfBirth} onChangeText={setDateOfBirth} colors={colors} />
+              {result.invalidBirthDate ? <Text style={[styles.validationText, { color: colors.destructive }]}>तारीख DD/MM/YYYY स्वरूपात भरा.</Text> : null}
+              <ResultRow label="वय" value={result.age || '—'} primary colors={colors} />
+            </CalculatorCard>
+          ) : active === 'lmp' ? (
+            <CalculatorCard title="LMP कॅल्क्युलेटर" description="EDD तारखेवरून LMP तारीख काढा." colors={colors}>
+              <DateInputRow label="EDD तारीख" value={eddDate} onChangeText={setEddDate} colors={colors} />
+              {result.invalidEddDate ? <Text style={[styles.validationText, { color: colors.destructive }]}>तारीख DD/MM/YYYY स्वरूपात भरा.</Text> : null}
+              <ResultRow label="LMP तारीख" value={result.calculatedLmp || '—'} primary colors={colors} />
+              <View style={[styles.formulaNote, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.formulaText, { color: colors.foreground }]}>LMP = EDD − 280 दिवस</Text>
+              </View>
+            </CalculatorCard>
+          ) : (
+            <CalculatorCard title="EDD कॅल्क्युलेटर" description="LMP तारखेवरून अंदाजे प्रसूती तारीख काढा." colors={colors}>
+              <DateInputRow label="LMP तारीख" value={lmpDate} onChangeText={setLmpDate} colors={colors} />
+              {result.invalidLmpDate ? <Text style={[styles.validationText, { color: colors.destructive }]}>तारीख DD/MM/YYYY स्वरूपात भरा.</Text> : null}
+              <ResultRow label="अंदाजे प्रसूती तारीख (EDD)" value={result.calculatedEdd || '—'} primary colors={colors} />
+              <View style={[styles.formulaNote, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.formulaText, { color: colors.foreground }]}>EDD = LMP + 280 दिवस</Text>
+              </View>
+            </CalculatorCard>
           )}
           <View style={[styles.tip, { backgroundColor: colors.accent }]}>
             <Feather name="info" size={17} color={colors.accentForeground} />
-            <Text style={[styles.tipText, { color: colors.accentForeground }]}>{active === 'indices' ? 'संख्या बदलली की HI, CI आणि BI Index आपोआप अपडेट होतात.' : 'रक्कम किंवा दर बदलला की निकाल आपोआप अपडेट होतो.'}</Text>
+            <Text style={[styles.tipText, { color: colors.accentForeground }]}>{active === 'indices' ? 'संख्या बदलली की HI, CI आणि BI Index आपोआप अपडेट होतात.' : active === 'age' ? 'जन्मतारीख भरल्यावर वय आपोआप अपडेट होते.' : 'तारीख भरल्यावर calculator चा निकाल आपोआप अपडेट होतो.'}</Text>
           </View>
         </View>
       </KeyboardAwareScrollViewCompat>
@@ -112,6 +151,10 @@ function CalculatorCard({ title, description, children, colors }: { title: strin
 
 function InputRow({ label, value, onChangeText, prefix, suffix, colors }: { label: string; value: string; onChangeText: (value: string) => void; prefix?: string; suffix?: string; colors: ReturnType<typeof useColors> }) {
   return <View style={styles.inputRow}><Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>{label}</Text><View style={[styles.numberInput, { backgroundColor: colors.background, borderColor: colors.input }]}>{prefix ? <Text style={[styles.affix, { color: colors.mutedForeground }]}>{prefix}</Text> : null}<TextInput keyboardType="decimal-pad" value={value} onChangeText={onChangeText} style={[styles.numberText, { color: colors.foreground }]} />{suffix ? <Text style={[styles.affix, { color: colors.mutedForeground }]}>{suffix}</Text> : null}</View></View>;
+}
+
+function DateInputRow({ label, value, onChangeText, colors }: { label: string; value: string; onChangeText: (value: string) => void; colors: ReturnType<typeof useColors> }) {
+  return <View style={styles.inputRow}><Text style={[styles.inputLabel, { color: colors.mutedForeground }]}>{label}</Text><TextInput keyboardType="number-pad" maxLength={10} placeholder="DD/MM/YYYY" placeholderTextColor={colors.mutedForeground} value={value} onChangeText={onChangeText} style={[styles.dateInput, { backgroundColor: colors.background, borderColor: colors.input, color: colors.foreground }]} /></View>;
 }
 
 function ResultRow({ label, value, primary, colors }: { label: string; value: string; primary?: boolean; colors: ReturnType<typeof useColors> }) {
@@ -132,6 +175,7 @@ const styles = StyleSheet.create({
   inputLabel: { fontFamily: 'Inter_500Medium', fontSize: 13 },
   numberInput: { width: 145, height: 43, borderRadius: 12, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11 },
   numberText: { flex: 1, textAlign: 'right', fontFamily: 'Inter_600SemiBold', fontSize: 15, padding: 0 },
+  dateInput: { width: 145, height: 43, borderRadius: 12, borderWidth: 1, paddingHorizontal: 11, textAlign: 'right', fontFamily: 'Inter_600SemiBold', fontSize: 13 },
   affix: { fontFamily: 'Inter_500Medium', fontSize: 13, marginHorizontal: 3 },
   resultRow: { borderTopWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 13, marginTop: 3 },
   resultLabel: { fontFamily: 'Inter_500Medium', fontSize: 13 },
