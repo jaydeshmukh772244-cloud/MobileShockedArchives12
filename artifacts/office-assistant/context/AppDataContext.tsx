@@ -20,6 +20,18 @@ export interface Village {
   population: string;
 }
 
+export interface DeathReportEntry {
+  id: string;
+  personName: string;
+  age: string;
+  gender: string;
+  villageName: string;
+  deathPlace: string;
+  deathDate: string;
+  cause: string;
+  remark: string;
+}
+
 export interface DiaryEntry {
   id: string;
   title: string;
@@ -32,10 +44,13 @@ export interface DiaryEntry {
 interface AppDataContextValue {
   profile: Profile;
   entries: DiaryEntry[];
+  deathReports: DeathReportEntry[];
   hydrated: boolean;
   addEntry: (entry: Omit<DiaryEntry, 'id' | 'date'> & { date?: string }) => void;
   toggleEntry: (id: string) => void;
   removeEntry: (id: string) => void;
+  addDeathReport: (report: Omit<DeathReportEntry, 'id'>) => void;
+  removeDeathReport: (id: string) => void;
   updateProfile: (profile: Profile) => void;
 }
 
@@ -96,6 +111,7 @@ const makeId = (prefix: string) =>
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [entries, setEntries] = useState<DiaryEntry[]>(starterEntries);
+  const [deathReports, setDeathReports] = useState<DeathReportEntry[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -107,6 +123,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             profile?: Partial<Profile> & { email?: string };
             people?: Array<{ name: string; role: string; phone: string; email?: string; kind?: string }>;
             entries?: DiaryEntry[];
+            deathReports?: DeathReportEntry[];
           };
           if (saved.profile) {
             setProfile({
@@ -133,6 +150,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             }
           }
           if (Array.isArray(saved.entries)) setEntries(saved.entries);
+          if (Array.isArray(saved.deathReports)) setDeathReports(saved.deathReports);
         }
       } catch {
         // The in-memory starter data remains usable if storage is unavailable.
@@ -145,13 +163,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries }));
-  }, [profile, entries, hydrated]);
+    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries, deathReports }));
+  }, [profile, entries, deathReports, hydrated]);
 
   const value = useMemo<AppDataContextValue>(
     () => ({
       profile,
       entries,
+      deathReports,
       hydrated,
       addEntry: (entry) =>
         setEntries((current) => [
@@ -167,9 +186,11 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           current.map((entry) => (entry.id === id ? { ...entry, done: !entry.done } : entry)),
         ),
       removeEntry: (id) => setEntries((current) => current.filter((entry) => entry.id !== id)),
+      addDeathReport: (report) => setDeathReports((current) => [...current, { ...report, id: makeId('death') }]),
+      removeDeathReport: (id) => setDeathReports((current) => current.filter((report) => report.id !== id)),
       updateProfile: (nextProfile) => setProfile(nextProfile),
     }),
-    [entries, hydrated, profile],
+    [deathReports, entries, hydrated, profile],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
