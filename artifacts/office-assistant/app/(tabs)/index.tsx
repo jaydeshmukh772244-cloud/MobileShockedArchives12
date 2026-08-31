@@ -15,7 +15,7 @@ const formatDay = (date: string) =>
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { entries, people } = useAppData();
+  const { entries, profile } = useAppData();
   const openItems = entries.filter((entry) => !entry.done).length;
   const completedItems = entries.filter((entry) => entry.done).length;
   const today = new Date();
@@ -52,7 +52,7 @@ export default function HomeScreen() {
           <View style={styles.metrics}>
             <MetricCard icon="clipboard" value={`${openItems}`} label="बाकी कामं" tone="blue" />
             <MetricCard icon="check-circle" value={`${completedItems}`} label="पूर्ण कामं" tone="green" />
-            <MetricCard icon="users" value={`${people.length}`} label="युजर्स" tone="purple" />
+            <MetricCard icon="user" value={profile.name ? '1' : '0'} label="प्रोफाइल" tone="purple" />
             <MetricCard icon="bar-chart-2" value={`${entries.length}`} label="या महिन्यातील नोंदी" tone="amber" />
           </View>
           <SectionTitle title="जलद कृती" />
