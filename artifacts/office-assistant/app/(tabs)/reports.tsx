@@ -70,7 +70,7 @@ export default function ReportsScreen() {
                 <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>तालुका: {profile.taluka || '—'}  जिल्हा: {profile.district || '—'}</Text>
                 <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
               </View>
-              <Text style={[styles.monthLabel, { color: colors.foreground }]}>MONTH {monthLabel.toUpperCase()}</Text>
+              <Text style={[styles.monthLabel, { color: colors.foreground }]}>{monthLabel}</Text>
             </View>
             <View style={[styles.reportTitleRule, { borderTopColor: colors.border }]} />
             <Text style={[styles.reportTitle, { color: colors.foreground }]}>मृत्यू अहवाल</Text>
@@ -99,9 +99,17 @@ export default function ReportsScreen() {
           {deathReports.length ? deathReports.map((entry, index) => (
             <DeathEntryCard key={entry.id} entry={entry} index={index} colors={colors} onRemove={() => Alert.alert('नोंद हटवायची?', `${entry.personName} यांची नोंद हटवायची आहे का?`, [{ text: 'रद्द करा', style: 'cancel' }, { text: 'हटवा', style: 'destructive', onPress: () => removeDeathReport(entry.id) }])} />
           )) : <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name="file-text" size={24} color={colors.mutedForeground} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>अजून मृत्यू नोंद नाही</Text><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>वरचे + बटन दाबून पहिली नोंद जोडा.</Text></View>}
-          <View style={[styles.footerCard, { backgroundColor: colors.secondary }]}>
-            <Feather name="user-check" size={18} color={colors.primary} />
-            <View style={styles.footerCopy}><Text style={[styles.footerName, { color: colors.foreground }]}>अहवाल तयार करणारे</Text><Text style={[styles.footerText, { color: colors.mutedForeground }]}>{profile.name || 'तुमचे नाव'} · आरोग्य सेवक · {profile.subCenter || 'उपकेंद्र'}</Text></View>
+          <View style={[styles.signatureArea, { backgroundColor: colors.secondary }]}>
+            <View style={styles.signatureColumn}>
+              <Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text>
+              <Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text>
+              <Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text>
+            </View>
+            <View style={[styles.signatureColumn, styles.signatureRight]}>
+              <Text style={[styles.signatureText, { color: colors.foreground }]}>नाव: {profile.name || '—'}</Text>
+              <Text style={[styles.signatureText, { color: colors.mutedForeground }]}>आरोग्य सेवक</Text>
+              <Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
+            </View>
           </View>
         </View>
       </KeyboardAwareScrollViewCompat>
@@ -170,8 +178,8 @@ const styles = StyleSheet.create({
   emptyCard: { borderRadius: 17, borderWidth: 1, alignItems: 'center', paddingVertical: 24, paddingHorizontal: 18, marginBottom: 14 },
   emptyTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 13, marginTop: 9 },
   emptyText: { fontFamily: 'Inter_400Regular', fontSize: 11, marginTop: 4, textAlign: 'center' },
-  footerCard: { borderRadius: 15, padding: 13, flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  footerCopy: { flex: 1 },
-  footerName: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
-  footerText: { fontFamily: 'Inter_400Regular', fontSize: 10, marginTop: 3 },
+  signatureArea: { borderRadius: 15, padding: 13, flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+  signatureColumn: { flex: 1 },
+  signatureRight: { alignItems: 'flex-end' },
+  signatureText: { fontFamily: 'Inter_400Regular', fontSize: 10, lineHeight: 16 },
 });
