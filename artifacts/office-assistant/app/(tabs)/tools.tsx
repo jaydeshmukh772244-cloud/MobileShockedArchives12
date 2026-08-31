@@ -46,7 +46,7 @@ const ageText = (date: Date | null) => {
 export default function ToolsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const [active, setActive] = useState<'indices' | 'age' | 'lmp' | 'edd'>('indices');
+  const [active, setActive] = useState<'indices' | 'age' | 'lmpEdd'>('indices');
   const [housesInspected, setHousesInspected] = useState('');
   const [positiveHouses, setPositiveHouses] = useState('');
   const [containersInspected, setContainersInspected] = useState('');
@@ -69,10 +69,10 @@ export default function ToolsScreen() {
       invalidIndices: positiveHouseCount > houses || positiveContainerCount > containers,
       age: ageText(birthDate),
       invalidBirthDate: dateOfBirth.trim().length > 0 && !birthDate,
-      calculatedLmp: formatDate(expectedDueDate ? addDays(expectedDueDate, -280) : null),
       invalidLmpDate: lmpDate.trim().length > 0 && !lastMenstrualPeriod,
       calculatedEdd: formatDate(lastMenstrualPeriod ? addDays(lastMenstrualPeriod, 280) : null),
       invalidEddDate: eddDate.trim().length > 0 && !expectedDueDate,
+      calculatedLmp: formatDate(expectedDueDate ? addDays(expectedDueDate, -280) : null),
     };
   }, [housesInspected, positiveHouses, containersInspected, positiveContainers, dateOfBirth, lmpDate, eddDate]);
 
@@ -85,8 +85,7 @@ export default function ToolsScreen() {
             {[
               { key: 'indices' as const, icon: 'activity' as const, label: 'HI/CI/BI' },
               { key: 'age' as const, icon: 'user' as const, label: 'Age' },
-              { key: 'lmp' as const, icon: 'calendar' as const, label: 'LMP' },
-              { key: 'edd' as const, icon: 'calendar' as const, label: 'EDD' },
+              { key: 'lmpEdd' as const, icon: 'calendar' as const, label: 'LMP / EDD' },
             ].map((item) => (
               <Pressable key={item.key} onPress={() => setActive(item.key)} style={[styles.toolTab, { backgroundColor: active === item.key ? colors.primary : colors.card, borderColor: active === item.key ? colors.primary : colors.border }]}>
                 <Feather name={item.icon} size={17} color={active === item.key ? '#FFFFFF' : colors.mutedForeground} />
@@ -116,22 +115,19 @@ export default function ToolsScreen() {
               {result.invalidBirthDate ? <Text style={[styles.validationText, { color: colors.destructive }]}>तारीख DD/MM/YYYY स्वरूपात भरा.</Text> : null}
               <ResultRow label="वय" value={result.age || '—'} primary colors={colors} />
             </CalculatorCard>
-          ) : active === 'lmp' ? (
-            <CalculatorCard title="LMP कॅल्क्युलेटर" description="EDD तारखेवरून LMP तारीख काढा." colors={colors}>
-              <DateInputRow label="EDD तारीख" value={eddDate} onChangeText={setEddDate} colors={colors} />
-              {result.invalidEddDate ? <Text style={[styles.validationText, { color: colors.destructive }]}>तारीख DD/MM/YYYY स्वरूपात भरा.</Text> : null}
-              <ResultRow label="LMP तारीख" value={result.calculatedLmp || '—'} primary colors={colors} />
-              <View style={[styles.formulaNote, { backgroundColor: colors.secondary }]}>
-                <Text style={[styles.formulaText, { color: colors.foreground }]}>LMP = EDD − 280 दिवस</Text>
-              </View>
-            </CalculatorCard>
           ) : (
-            <CalculatorCard title="EDD कॅल्क्युलेटर" description="LMP तारखेवरून अंदाजे प्रसूती तारीख काढा." colors={colors}>
+            <CalculatorCard title="LMP / EDD कॅल्क्युलेटर" description="LMP तारीख भरल्यावर अंदाजे प्रसूती तारीख काढा." colors={colors}>
               <DateInputRow label="LMP तारीख" value={lmpDate} onChangeText={setLmpDate} colors={colors} />
               {result.invalidLmpDate ? <Text style={[styles.validationText, { color: colors.destructive }]}>तारीख DD/MM/YYYY स्वरूपात भरा.</Text> : null}
               <ResultRow label="अंदाजे प्रसूती तारीख (EDD)" value={result.calculatedEdd || '—'} primary colors={colors} />
               <View style={[styles.formulaNote, { backgroundColor: colors.secondary }]}>
                 <Text style={[styles.formulaText, { color: colors.foreground }]}>EDD = LMP + 280 दिवस</Text>
+              </View>
+              <DateInputRow label="EDD तारीख" value={eddDate} onChangeText={setEddDate} colors={colors} />
+              {result.invalidEddDate ? <Text style={[styles.validationText, { color: colors.destructive }]}>तारीख DD/MM/YYYY स्वरूपात भरा.</Text> : null}
+              <ResultRow label="शेवटची पाळीची तारीख (LMP)" value={result.calculatedLmp || '—'} colors={colors} />
+              <View style={[styles.formulaNote, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.formulaText, { color: colors.foreground }]}>LMP = EDD − 280 दिवस</Text>
               </View>
             </CalculatorCard>
           )}
