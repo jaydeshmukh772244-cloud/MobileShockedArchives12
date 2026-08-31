@@ -1,10 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MetricCard } from '@/components/MetricCard';
-import { ScreenHeader } from '@/components/ScreenHeader';
 import { SectionTitle } from '@/components/SectionTitle';
 import { useAppData } from '@/context/AppDataContext';
 import { useColors } from '@/hooks/useColors';
@@ -21,6 +20,8 @@ export default function HomeScreen() {
   const today = new Date();
   const dateLabel = new Intl.DateTimeFormat('mr-IN', { day: 'numeric', month: 'short' }).format(today);
   const weekdayLabel = new Intl.DateTimeFormat('mr-IN', { weekday: 'long' }).format(today);
+  const profileLocation = [profile.district, profile.taluka].filter(Boolean).join(' · ');
+  const profileInitial = profile.name.trim().slice(0, 1) || 'आ';
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -38,7 +39,19 @@ export default function HomeScreen() {
             <Feather name="bell" size={19} color={colors.foreground} />
           </Pressable>
         </View>
-        <ScreenHeader compact eyebrow="आजचा डॅशबोर्ड" title="नमस्कार" subtitle="आजच्या कामावर एक नजर टाका आणि दिवस व्यवस्थित सुरू करा." />
+        <View style={[styles.profileWelcome, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.homeAvatar, { backgroundColor: colors.secondary }]}>
+            {profile.avatarUri ? <Image source={{ uri: profile.avatarUri }} style={styles.homeAvatarImage} accessibilityLabel="प्रोफाइल फोटो" /> : <Text style={[styles.homeAvatarText, { color: colors.primary }]}>{profileInitial}</Text>}
+          </View>
+          <View style={styles.profileWelcomeCopy}>
+            <Text style={[styles.profileWelcomeEyebrow, { color: colors.primary }]}>माझे प्रोफाइल</Text>
+            <Text style={[styles.profileWelcomeName, { color: colors.foreground }]} numberOfLines={1}>{profile.name.trim() || 'तुमचे नाव'}</Text>
+            <Text style={[styles.profileWelcomeMeta, { color: colors.mutedForeground }]} numberOfLines={1}>{profileLocation || 'जिल्हा आणि तालुका भरा'}</Text>
+          </View>
+          <Pressable testID="home-profile-edit" accessibilityRole="button" accessibilityLabel="प्रोफाइल संपादित करा" onPress={() => router.push('/people')} style={({ pressed }) => [styles.profileEditButton, { backgroundColor: colors.secondary, opacity: pressed ? 0.7 : 1 }]}>
+            <Feather name="edit-2" size={16} color={colors.primary} />
+          </Pressable>
+        </View>
         <View style={[styles.focusCard, { backgroundColor: colors.primary }]}>
           <View style={styles.focusCopy}>
             <Text style={styles.focusEyebrow}>आजचा फोकस</Text>
@@ -96,6 +109,15 @@ const styles = StyleSheet.create({
   dateText: { fontFamily: 'Inter_700Bold', fontSize: 13 },
   weekdayText: { fontFamily: 'Inter_600SemiBold', fontSize: 11, marginTop: 3 },
   bellButton: { width: 42, height: 42, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  profileWelcome: { marginHorizontal: 20, minHeight: 116, borderRadius: 22, borderWidth: 1, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
+  homeAvatar: { width: 68, height: 68, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: 14, overflow: 'hidden' },
+  homeAvatarImage: { width: '100%', height: '100%' },
+  homeAvatarText: { fontFamily: 'Inter_700Bold', fontSize: 28 },
+  profileWelcomeCopy: { flex: 1, minWidth: 0 },
+  profileWelcomeEyebrow: { fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 0.5 },
+  profileWelcomeName: { fontFamily: 'Inter_700Bold', fontSize: 20, marginTop: 6 },
+  profileWelcomeMeta: { fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 5 },
+  profileEditButton: { width: 35, height: 35, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
   content: { paddingHorizontal: 20 },
   focusCard: { marginHorizontal: 20, borderRadius: 24, minHeight: 150, padding: 21, flexDirection: 'row', overflow: 'hidden', marginBottom: 25 },
   focusCopy: { flex: 1, paddingRight: 12 },
