@@ -48,6 +48,23 @@ export default function PeopleScreen() {
     setVillages((current) => current.filter((village) => village.id !== id));
   };
 
+  const makeProfile = (nextAvatarUri = avatarUri): Profile => ({
+    name: name.trim(),
+    avatarUri: nextAvatarUri,
+    district: district.trim(),
+    taluka: taluka.trim(),
+    primaryHealthCenter: primaryHealthCenter.trim(),
+    subCenter: subCenter.trim(),
+    villages: villages.map((village) => ({
+      ...village,
+      name: village.name.trim(),
+      population: village.population.trim(),
+    })),
+    bsCode: bsCode.trim(),
+    phone: phone.trim(),
+    gmail: gmail.trim(),
+  });
+
   const pickProfilePicture = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -55,9 +72,13 @@ export default function PeopleScreen() {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        base64: true,
       });
-      if (!result.canceled && result.assets[0]?.uri) {
-        setAvatarUri(result.assets[0].uri);
+      const asset = result.canceled || !result.assets ? null : result.assets[0];
+      if (!result.canceled && asset?.uri) {
+        const savedUri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+        setAvatarUri(savedUri);
+        updateProfile(makeProfile(savedUri));
       }
     } catch {
       Alert.alert('फोटो निवडता आला नाही', 'कृपया पुन्हा प्रयत्न करा.');
@@ -73,23 +94,7 @@ export default function PeopleScreen() {
       Alert.alert('माहिती अपुरी आहे', 'कृपया तुमचे पूर्ण नाव लिहा.');
       return;
     }
-    const nextProfile: Profile = {
-      name: name.trim(),
-      avatarUri,
-      district: district.trim(),
-      taluka: taluka.trim(),
-      primaryHealthCenter: primaryHealthCenter.trim(),
-      subCenter: subCenter.trim(),
-      villages: villages.map((village) => ({
-        ...village,
-        name: village.name.trim(),
-        population: village.population.trim(),
-      })),
-      bsCode: bsCode.trim(),
-      phone: phone.trim(),
-      gmail: gmail.trim(),
-    };
-    updateProfile(nextProfile);
+    updateProfile(makeProfile());
     Alert.alert('प्रोफाइल जतन झाले', 'तुमची माहिती यशस्वीपणे जतन झाली.');
   };
 
