@@ -3,9 +3,20 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 
 export interface Profile {
   name: string;
-  role: string;
+  district: string;
+  taluka: string;
+  primaryHealthCenter: string;
+  subCenter: string;
+  villages: Village[];
+  bsCode: string;
   phone: string;
-  email: string;
+  gmail: string;
+}
+
+export interface Village {
+  id: string;
+  name: string;
+  population: string;
 }
 
 export interface DiaryEntry {
@@ -31,9 +42,14 @@ const STORAGE_KEY = '@office-assistant/data';
 
 const emptyProfile: Profile = {
   name: '',
-  role: '',
+  district: '',
+  taluka: '',
+  primaryHealthCenter: '',
+  subCenter: '',
+  villages: [],
+  bsCode: '',
   phone: '',
-  email: '',
+  gmail: '',
 };
 
 const today = new Date();
@@ -86,20 +102,30 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = JSON.parse(raw) as {
-            profile?: Profile;
+            profile?: Partial<Profile> & { email?: string };
             people?: Array<{ name: string; role: string; phone: string; email?: string; kind?: string }>;
             entries?: DiaryEntry[];
           };
           if (saved.profile) {
-            setProfile({ ...emptyProfile, ...saved.profile });
+            setProfile({
+              ...emptyProfile,
+              ...saved.profile,
+              villages: Array.isArray(saved.profile.villages) ? saved.profile.villages : [],
+              gmail: saved.profile.gmail ?? saved.profile.email ?? '',
+            });
           } else if (Array.isArray(saved.people)) {
             const previousUser = saved.people.find((person) => person.kind === 'team') ?? saved.people[0];
             if (previousUser) {
               setProfile({
                 name: previousUser.name ?? '',
-                role: previousUser.role ?? '',
+                district: '',
+                taluka: '',
+                primaryHealthCenter: '',
+                subCenter: '',
+                villages: [],
+                bsCode: '',
                 phone: previousUser.phone ?? '',
-                email: previousUser.email ?? '',
+                gmail: previousUser.email ?? '',
               });
             }
           }
