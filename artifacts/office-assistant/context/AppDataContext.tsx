@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 
 export interface Profile {
   name: string;
+  avatarUri: string;
   district: string;
   taluka: string;
   primaryHealthCenter: string;
@@ -42,6 +43,7 @@ const STORAGE_KEY = '@office-assistant/data';
 
 const emptyProfile: Profile = {
   name: '',
+  avatarUri: '',
   district: '',
   taluka: '',
   primaryHealthCenter: '',
@@ -118,6 +120,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             if (previousUser) {
               setProfile({
                 name: previousUser.name ?? '',
+                avatarUri: '',
                 district: '',
                 taluka: '',
                 primaryHealthCenter: '',

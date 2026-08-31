@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -12,6 +13,7 @@ export default function PeopleScreen() {
   const insets = useSafeAreaInsets();
   const { profile, updateProfile } = useAppData();
   const [name, setName] = useState('');
+  const [avatarUri, setAvatarUri] = useState('');
   const [district, setDistrict] = useState('');
   const [taluka, setTaluka] = useState('');
   const [primaryHealthCenter, setPrimaryHealthCenter] = useState('');
@@ -23,6 +25,7 @@ export default function PeopleScreen() {
 
   useEffect(() => {
     setName(profile.name);
+    setAvatarUri(profile.avatarUri);
     setDistrict(profile.district);
     setTaluka(profile.taluka);
     setPrimaryHealthCenter(profile.primaryHealthCenter);
@@ -45,6 +48,26 @@ export default function PeopleScreen() {
     setVillages((current) => current.filter((village) => village.id !== id));
   };
 
+  const pickProfilePicture = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setAvatarUri(result.assets[0].uri);
+      }
+    } catch {
+      Alert.alert('फोटो निवडता आला नाही', 'कृपया पुन्हा प्रयत्न करा.');
+    }
+  };
+
+  const removeProfilePicture = () => {
+    setAvatarUri('');
+  };
+
   const saveProfile = () => {
     if (!name.trim()) {
       Alert.alert('माहिती अपुरी आहे', 'कृपया तुमचे पूर्ण नाव लिहा.');
@@ -52,6 +75,7 @@ export default function PeopleScreen() {
     }
     const nextProfile: Profile = {
       name: name.trim(),
+      avatarUri,
       district: district.trim(),
       taluka: taluka.trim(),
       primaryHealthCenter: primaryHealthCenter.trim(),
@@ -78,13 +102,22 @@ export default function PeopleScreen() {
         <ScreenHeader eyebrow="आरोग्य सेवकाची माहिती" title="माझे प्रोफाइल" subtitle="तुमच्या कार्यक्षेत्राची आणि संपर्काची माहिती येथे जतन करा." />
         <View style={styles.body}>
           <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
-            <View style={styles.profileAvatar}><Text style={styles.profileAvatarText}>{initial}</Text></View>
+            <Pressable accessibilityRole="button" accessibilityLabel="प्रोफाइल फोटो निवडा" onPress={pickProfilePicture} style={styles.avatarPressable}>
+              <View style={styles.profileAvatar}>
+                {avatarUri ? <Image source={{ uri: avatarUri }} style={styles.profileAvatarImage} accessibilityLabel="प्रोफाइल फोटो" /> : <Text style={styles.profileAvatarText}>{initial}</Text>}
+                <View style={styles.photoBadge}><Feather name="camera" size={12} color="#FFFFFF" /></View>
+              </View>
+            </Pressable>
             <View style={styles.profileCopy}>
               <Text style={styles.profileEyebrow}>सध्याचे प्रोफाइल</Text>
               <Text style={styles.profileName}>{name.trim() || 'तुमचे नाव'}</Text>
               <Text style={styles.profileRole}>{locationLine || 'जिल्हा आणि तालुका नमूद करा'}</Text>
             </View>
             <Feather name="user" size={24} color="#D8E3FF" />
+          </View>
+          <View style={styles.photoActions}>
+            <Pressable onPress={pickProfilePicture} style={({ pressed }) => [styles.photoAction, { borderColor: colors.border, backgroundColor: pressed ? colors.secondary : colors.card }]}><Feather name={avatarUri ? 'refresh-cw' : 'image'} size={15} color={colors.primary} /><Text style={[styles.photoActionText, { color: colors.primary }]}>{avatarUri ? 'फोटो बदला' : 'प्रोफाइल फोटो निवडा'}</Text></Pressable>
+            {avatarUri ? <Pressable onPress={removeProfilePicture} style={({ pressed }) => [styles.removePhotoAction, { opacity: pressed ? 0.65 : 1 }]}><Text style={[styles.removePhotoText, { color: colors.destructive }]}>फोटो काढा</Text></Pressable> : null}
           </View>
           <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[styles.formTitle, { color: colors.foreground }]}>मूलभूत माहिती</Text>
@@ -143,12 +176,20 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   body: { paddingHorizontal: 20 },
   profileCard: { borderRadius: 22, padding: 18, flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  avatarPressable: { borderRadius: 20 },
   profileAvatar: { width: 58, height: 58, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center', marginRight: 13 },
+  profileAvatarImage: { width: '100%', height: '100%', borderRadius: 20 },
   profileAvatarText: { color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 25 },
+  photoBadge: { position: 'absolute', right: -4, bottom: -4, width: 23, height: 23, borderRadius: 8, backgroundColor: '#1F55D5', borderWidth: 2, borderColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   profileCopy: { flex: 1 },
   profileEyebrow: { color: '#C9D7FF', fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 0.7 },
   profileName: { color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 18, marginTop: 5 },
   profileRole: { color: '#E0E8FF', fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 3 },
+  photoActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: -6, marginBottom: 16 },
+  photoAction: { minHeight: 36, borderRadius: 11, borderWidth: 1, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 7 },
+  photoActionText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
+  removePhotoAction: { paddingVertical: 8 },
+  removePhotoText: { fontFamily: 'Inter_500Medium', fontSize: 12 },
   form: { padding: 16, borderRadius: 20, borderWidth: 1, marginBottom: 14 },
   formTitle: { fontFamily: 'Inter_700Bold', fontSize: 17, marginBottom: 16 },
   label: { fontFamily: 'Inter_600SemiBold', fontSize: 11, marginBottom: 6 },
