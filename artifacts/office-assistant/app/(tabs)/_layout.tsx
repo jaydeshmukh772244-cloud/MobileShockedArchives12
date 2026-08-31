@@ -32,8 +32,8 @@ function NativeTabLayout() {
         <Label>Reports</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="people">
-        <Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
-        <Label>Users</Label>
+        <Icon sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }} />
+        <Label>प्रोफाइल</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -92,7 +92,7 @@ function ClassicTabLayout() {
       <Tabs.Screen name="diary" options={{ title: 'डायरी', tabBarIcon: ({ color }) => <Feather name="book-open" size={22} color={color} /> }} />
       <Tabs.Screen name="tools" options={{ title: 'Tools', tabBarIcon: ({ color }) => <Feather name="percent" size={22} color={color} /> }} />
       <Tabs.Screen name="reports" options={{ title: 'Reports', tabBarIcon: ({ color }) => <Feather name="bar-chart-2" size={22} color={color} /> }} />
-      <Tabs.Screen name="people" options={{ title: 'Users', tabBarIcon: ({ color }) => <Feather name="users" size={22} color={color} /> }} />
+      <Tabs.Screen name="people" options={{ title: 'प्रोफाइल', tabBarIcon: ({ color }) => <Feather name="user" size={22} color={color} /> }} />
     </Tabs>
   );
 }

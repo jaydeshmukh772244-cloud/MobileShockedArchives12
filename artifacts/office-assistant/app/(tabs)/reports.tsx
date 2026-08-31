@@ -10,7 +10,7 @@ import { useColors } from '@/hooks/useColors';
 export default function ReportsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { entries, people } = useAppData();
+  const { entries, profile } = useAppData();
   const done = entries.filter((entry) => entry.done).length;
   const categories = useMemo(() => ['मीटिंग', 'फॉलो-अप', 'अकाउंट्स', 'सामान्य'].map((name) => ({ name, count: entries.filter((entry) => entry.category === name).length })), [entries]);
   const maxCount = Math.max(...categories.map((item) => item.count), 1);
@@ -31,7 +31,7 @@ export default function ReportsScreen() {
           <SectionTitle title="या महिन्याची आकडेवारी" />
           <View style={styles.statsRow}>
             <MiniStat icon="book-open" value={`${entries.length}`} label="डायरी नोंदी" colors={colors} />
-            <MiniStat icon="users" value={`${people.length}`} label="युजर्स" colors={colors} />
+            <MiniStat icon="user" value={profile.name ? '1' : '0'} label="प्रोफाइल" colors={colors} />
           </View>
           <SectionTitle title="कामाचं विभाजन" />
           <View style={[styles.breakdown, { backgroundColor: colors.card, borderColor: colors.border }]}>

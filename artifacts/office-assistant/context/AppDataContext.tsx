@@ -1,15 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-export type PersonKind = 'team' | 'customer';
-
-export interface Person {
-  id: string;
+export interface Profile {
   name: string;
   role: string;
   phone: string;
   email: string;
-  kind: PersonKind;
 }
 
 export interface DiaryEntry {
@@ -22,36 +18,23 @@ export interface DiaryEntry {
 }
 
 interface AppDataContextValue {
-  people: Person[];
+  profile: Profile;
   entries: DiaryEntry[];
   hydrated: boolean;
   addEntry: (entry: Omit<DiaryEntry, 'id' | 'date'> & { date?: string }) => void;
   toggleEntry: (id: string) => void;
   removeEntry: (id: string) => void;
-  addPerson: (person: Omit<Person, 'id'>) => void;
-  removePerson: (id: string) => void;
+  updateProfile: (profile: Profile) => void;
 }
 
 const STORAGE_KEY = '@office-assistant/data';
 
-const starterPeople: Person[] = [
-  {
-    id: 'person-1',
-    name: 'अमोल देशमुख',
-    role: 'ऑफिस व्यवस्थापक',
-    phone: '98765 43210',
-    email: 'amol@office.local',
-    kind: 'team',
-  },
-  {
-    id: 'person-2',
-    name: 'स्नेहा पाटील',
-    role: 'ग्राहक',
-    phone: '97654 32109',
-    email: 'sneha@example.com',
-    kind: 'customer',
-  },
-];
+const emptyProfile: Profile = {
+  name: '',
+  role: '',
+  phone: '',
+  email: '',
+};
 
 const today = new Date();
 const dateKey = (offset = 0) => {
@@ -93,7 +76,7 @@ const makeId = (prefix: string) =>
   `${prefix}-${Date.now().toString()}-${Math.random().toString(36).slice(2, 8)}`;
 
 export function AppDataProvider({ children }: { children: React.ReactNode }) {
-  const [people, setPeople] = useState<Person[]>(starterPeople);
+  const [profile, setProfile] = useState<Profile>(emptyProfile);
   const [entries, setEntries] = useState<DiaryEntry[]>(starterEntries);
   const [hydrated, setHydrated] = useState(false);
 
@@ -102,8 +85,24 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
-          const saved = JSON.parse(raw) as { people?: Person[]; entries?: DiaryEntry[] };
-          if (Array.isArray(saved.people)) setPeople(saved.people);
+          const saved = JSON.parse(raw) as {
+            profile?: Profile;
+            people?: Array<{ name: string; role: string; phone: string; email?: string; kind?: string }>;
+            entries?: DiaryEntry[];
+          };
+          if (saved.profile) {
+            setProfile({ ...emptyProfile, ...saved.profile });
+          } else if (Array.isArray(saved.people)) {
+            const previousUser = saved.people.find((person) => person.kind === 'team') ?? saved.people[0];
+            if (previousUser) {
+              setProfile({
+                name: previousUser.name ?? '',
+                role: previousUser.role ?? '',
+                phone: previousUser.phone ?? '',
+                email: previousUser.email ?? '',
+              });
+            }
+          }
           if (Array.isArray(saved.entries)) setEntries(saved.entries);
         }
       } catch {
@@ -117,12 +116,12 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ people, entries }));
-  }, [people, entries, hydrated]);
+    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries }));
+  }, [profile, entries, hydrated]);
 
   const value = useMemo<AppDataContextValue>(
     () => ({
-      people,
+      profile,
       entries,
       hydrated,
       addEntry: (entry) =>
@@ -139,10 +138,9 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           current.map((entry) => (entry.id === id ? { ...entry, done: !entry.done } : entry)),
         ),
       removeEntry: (id) => setEntries((current) => current.filter((entry) => entry.id !== id)),
-      addPerson: (person) => setPeople((current) => [{ ...person, id: makeId('person') }, ...current]),
-      removePerson: (id) => setPeople((current) => current.filter((person) => person.id !== id)),
+      updateProfile: (nextProfile) => setProfile(nextProfile),
     }),
-    [entries, hydrated, people],
+    [entries, hydrated, profile],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
