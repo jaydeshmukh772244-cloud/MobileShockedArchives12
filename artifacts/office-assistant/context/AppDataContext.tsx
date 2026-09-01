@@ -43,6 +43,17 @@ export interface CataractReportEntry {
   remark: string;
 }
 
+export interface CataractSurgeryReportEntry {
+  id: string;
+  personName: string;
+  age: string;
+  gender: string;
+  villageName: string;
+  eye: 'right' | 'left' | '';
+  surgeryDate: string;
+  remark: string;
+}
+
 export interface ReportPeriod {
   month: number;
   year: number;
@@ -62,6 +73,7 @@ interface AppDataContextValue {
   entries: DiaryEntry[];
   deathReports: DeathReportEntry[];
   cataractReports: CataractReportEntry[];
+  cataractSurgeryReports: CataractSurgeryReportEntry[];
   reportPeriod: ReportPeriod;
   hydrated: boolean;
   addEntry: (entry: Omit<DiaryEntry, 'id' | 'date'> & { date?: string }) => void;
@@ -73,6 +85,9 @@ interface AppDataContextValue {
   addCataractReport: (report: Omit<CataractReportEntry, 'id'>) => void;
   updateCataractReport: (id: string, report: Omit<CataractReportEntry, 'id'>) => void;
   removeCataractReport: (id: string) => void;
+  addCataractSurgeryReport: (report: Omit<CataractSurgeryReportEntry, 'id'>) => void;
+  updateCataractSurgeryReport: (id: string, report: Omit<CataractSurgeryReportEntry, 'id'>) => void;
+  removeCataractSurgeryReport: (id: string) => void;
   updateReportPeriod: (period: ReportPeriod) => void;
   updateProfile: (profile: Profile) => void;
 }
@@ -142,6 +157,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [entries, setEntries] = useState<DiaryEntry[]>(starterEntries);
   const [deathReports, setDeathReports] = useState<DeathReportEntry[]>([]);
   const [cataractReports, setCataractReports] = useState<CataractReportEntry[]>([]);
+  const [cataractSurgeryReports, setCataractSurgeryReports] = useState<CataractSurgeryReportEntry[]>([]);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>(defaultReportPeriod);
   const [hydrated, setHydrated] = useState(false);
 
@@ -156,6 +172,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             entries?: DiaryEntry[];
             deathReports?: DeathReportEntry[];
             cataractReports?: Array<CataractReportEntry & { surgeryDate?: string }>;
+            cataractSurgeryReports?: CataractSurgeryReportEntry[];
             reportPeriod?: ReportPeriod;
           };
           if (saved.profile) {
@@ -190,6 +207,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
               searchDate: entry.searchDate ?? entry.surgeryDate ?? '',
             })));
           }
+          if (Array.isArray(saved.cataractSurgeryReports)) setCataractSurgeryReports(saved.cataractSurgeryReports);
           if (saved.reportPeriod && Number.isInteger(saved.reportPeriod.month) && saved.reportPeriod.month >= 1 && saved.reportPeriod.month <= 12 && Number.isInteger(saved.reportPeriod.year)) {
             setReportPeriod(saved.reportPeriod);
           }
@@ -205,8 +223,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries, deathReports, cataractReports, reportPeriod }));
-  }, [profile, entries, deathReports, cataractReports, reportPeriod, hydrated]);
+    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries, deathReports, cataractReports, cataractSurgeryReports, reportPeriod }));
+  }, [profile, entries, deathReports, cataractReports, cataractSurgeryReports, reportPeriod, hydrated]);
 
   const value = useMemo<AppDataContextValue>(
     () => ({
@@ -214,6 +232,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       entries,
       deathReports,
       cataractReports,
+      cataractSurgeryReports,
       reportPeriod,
       hydrated,
       addEntry: (entry) =>
@@ -236,10 +255,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addCataractReport: (report) => setCataractReports((current) => [...current, { ...report, id: makeId('cataract') }]),
       updateCataractReport: (id, report) => setCataractReports((current) => current.map((entry) => (entry.id === id ? { ...report, id } : entry))),
       removeCataractReport: (id) => setCataractReports((current) => current.filter((report) => report.id !== id)),
+      addCataractSurgeryReport: (report) => setCataractSurgeryReports((current) => [...current, { ...report, id: makeId('cataract-surgery') }]),
+      updateCataractSurgeryReport: (id, report) => setCataractSurgeryReports((current) => current.map((entry) => (entry.id === id ? { ...report, id } : entry))),
+      removeCataractSurgeryReport: (id) => setCataractSurgeryReports((current) => current.filter((report) => report.id !== id)),
       updateReportPeriod: (period) => setReportPeriod(period),
       updateProfile: (nextProfile) => setProfile(nextProfile),
     }),
-    [cataractReports, deathReports, entries, hydrated, profile, reportPeriod],
+    [cataractReports, cataractSurgeryReports, deathReports, entries, hydrated, profile, reportPeriod],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
