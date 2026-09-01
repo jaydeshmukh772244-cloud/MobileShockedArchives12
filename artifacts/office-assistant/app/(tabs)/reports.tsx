@@ -5,13 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useAppData } from '@/context/AppDataContext';
-import type { CataractReportEntry, DeathReportEntry, Profile } from '@/context/AppDataContext';
+import type { CataractReportEntry, CataractSurgeryReportEntry, DeathReportEntry, Profile } from '@/context/AppDataContext';
 import { useColors } from '@/hooks/useColors';
 
 export default function ReportsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { profile, deathReports, addDeathReport, updateDeathReport, removeDeathReport, cataractReports, addCataractReport, updateCataractReport, removeCataractReport, reportPeriod, updateReportPeriod } = useAppData();
+  const { profile, deathReports, addDeathReport, updateDeathReport, removeDeathReport, cataractReports, addCataractReport, updateCataractReport, removeCataractReport, cataractSurgeryReports, addCataractSurgeryReport, updateCataractSurgeryReport, removeCataractSurgeryReport, reportPeriod, updateReportPeriod } = useAppData();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [personName, setPersonName] = useState('');
@@ -34,6 +34,15 @@ export default function ReportsScreen() {
   const [cataractEye, setCataractEye] = useState<'right' | 'left' | ''>('');
   const [cataractSearchDate, setCataractSearchDate] = useState('');
   const [cataractRemark, setCataractRemark] = useState('');
+  const [showCataractSurgeryForm, setShowCataractSurgeryForm] = useState(false);
+  const [editingCataractSurgeryId, setEditingCataractSurgeryId] = useState<string | null>(null);
+  const [cataractSurgeryPersonName, setCataractSurgeryPersonName] = useState('');
+  const [cataractSurgeryAge, setCataractSurgeryAge] = useState('');
+  const [cataractSurgeryGender, setCataractSurgeryGender] = useState('');
+  const [cataractSurgeryVillageName, setCataractSurgeryVillageName] = useState('');
+  const [cataractSurgeryEye, setCataractSurgeryEye] = useState<'right' | 'left' | ''>('');
+  const [cataractSurgeryDate, setCataractSurgeryDate] = useState('');
+  const [cataractSurgeryRemark, setCataractSurgeryRemark] = useState('');
 
   useEffect(() => {
     setPeriodMonth(String(reportPeriod.month));
@@ -164,6 +173,60 @@ export default function ReportsScreen() {
     setShowCataractForm(true);
   };
 
+  const resetCataractSurgeryForm = () => {
+    setCataractSurgeryPersonName('');
+    setCataractSurgeryAge('');
+    setCataractSurgeryGender('');
+    setCataractSurgeryVillageName('');
+    setCataractSurgeryEye('');
+    setCataractSurgeryDate('');
+    setCataractSurgeryRemark('');
+  };
+
+  const saveCataractSurgeryReport = () => {
+    if (!cataractSurgeryPersonName.trim() || !cataractSurgeryEye) {
+      Alert.alert('माहिती अपुरी आहे', 'रुग्णाचे नाव आणि कोणता डोळा हे निवडा.');
+      return;
+    }
+    const entry: Omit<CataractSurgeryReportEntry, 'id'> = {
+      personName: cataractSurgeryPersonName.trim(),
+      age: cataractSurgeryAge.trim(),
+      gender: cataractSurgeryGender.trim(),
+      villageName: cataractSurgeryVillageName.trim(),
+      eye: cataractSurgeryEye,
+      surgeryDate: cataractSurgeryDate.trim(),
+      remark: cataractSurgeryRemark.trim(),
+    };
+    if (editingCataractSurgeryId) {
+      updateCataractSurgeryReport(editingCataractSurgeryId, entry);
+    } else {
+      addCataractSurgeryReport(entry);
+    }
+    resetCataractSurgeryForm();
+    setEditingCataractSurgeryId(null);
+    setShowCataractSurgeryForm(false);
+  };
+
+  const toggleCataractSurgeryForm = () => {
+    if (showCataractSurgeryForm) {
+      resetCataractSurgeryForm();
+      setEditingCataractSurgeryId(null);
+    }
+    setShowCataractSurgeryForm((value) => !value);
+  };
+
+  const editCataractSurgeryReport = (entry: CataractSurgeryReportEntry) => {
+    setEditingCataractSurgeryId(entry.id);
+    setCataractSurgeryPersonName(entry.personName);
+    setCataractSurgeryAge(entry.age);
+    setCataractSurgeryGender(entry.gender);
+    setCataractSurgeryVillageName(entry.villageName);
+    setCataractSurgeryEye(entry.eye);
+    setCataractSurgeryDate(entry.surgeryDate);
+    setCataractSurgeryRemark(entry.remark);
+    setShowCataractSurgeryForm(true);
+  };
+
   const exportPdf = async (action: 'share' | 'save') => {
     const html = buildDeathReportHtml({ profile, deathReports, monthLabel });
     try {
@@ -210,6 +273,31 @@ export default function ReportsScreen() {
       });
     } catch (error) {
       console.error('Cataract PDF export failed', error);
+      Alert.alert('PDF तयार करता आला नाही', 'कृपया पुन्हा प्रयत्न करा.');
+    }
+  };
+
+  const exportCataractSurgeryPdf = async () => {
+    const html = buildCataractSurgeryReportHtml({ profile, cataractSurgeryReports, monthLabel });
+    try {
+      if (Platform.OS === 'web') {
+        window.print();
+        return;
+      }
+      const Print = await import('expo-print');
+      const Sharing = await import('expo-sharing');
+      const { uri } = await Print.printToFileAsync({ html });
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('PDF तयार आहे', 'या device वर share सुविधा उपलब्ध नाही.');
+        return;
+      }
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'मोतीबिंदू शस्त्रक्रिया अहवाल शेअर करा',
+        UTI: 'com.adobe.pdf',
+      });
+    } catch (error) {
+      console.error('Cataract surgery PDF export failed', error);
       Alert.alert('PDF तयार करता आला नाही', 'कृपया पुन्हा प्रयत्न करा.');
     }
   };
@@ -321,12 +409,12 @@ export default function ReportsScreen() {
                 <EyeChoice label="उजवा" value="right" selected={cataractEye === 'right'} onPress={() => setCataractEye('right')} colors={colors} />
                 <EyeChoice label="डावा" value="left" selected={cataractEye === 'left'} onPress={() => setCataractEye('left')} colors={colors} />
               </View>
-              <FormField label="शोधण्याचा दिनांक" value={cataractSearchDate} onChangeText={setCataractSearchDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} />
+              <FormField label="शोधल्याचा दिनांक" value={cataractSearchDate} onChangeText={setCataractSearchDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} />
               <FormField label="शेरा" value={cataractRemark} onChangeText={setCataractRemark} placeholder="अतिरिक्त माहिती" colors={colors} />
               <Pressable testID="save-cataract-report" onPress={saveCataractReport} style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="check" size={17} color="#FFFFFF" /><Text style={styles.saveText}>{editingCataractId ? 'बदल जतन करा' : 'नोंद जतन करा'}</Text></Pressable>
             </View> : null}
             <View style={styles.entriesHeader}>
-              <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>रुग्णांच्या नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>उजवा / डावा डोळा आणि शोधण्याचा दिनांक.</Text></View>
+              <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>रुग्णांच्या नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>उजवा / डावा डोळा आणि शोधल्याचा दिनांक.</Text></View>
               <View style={[styles.countPill, { backgroundColor: colors.secondary }]}><Text style={[styles.countPillText, { color: colors.primary }]}>{cataractReports.length}</Text></View>
             </View>
             {cataractReports.length ? cataractReports.map((entry, index) => (
@@ -335,6 +423,58 @@ export default function ReportsScreen() {
             {cataractReports.length ? <View style={[styles.exportCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.exportHeading}><View><Text style={[styles.exportTitle, { color: colors.foreground }]}>मोतीबिंदू रिपोर्ट तयार आहे?</Text><Text style={[styles.exportText, { color: colors.mutedForeground }]}>नोंदी तपासल्यानंतर PDF शेअर करा.</Text></View><Feather name="file-text" size={20} color={colors.primary} /></View>
               <Pressable testID="share-cataract-report-pdf" onPress={() => void exportCataractPdf()} style={({ pressed }) => [styles.exportButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="share-2" size={15} color="#FFFFFF" /><Text style={styles.exportButtonText}>PDF शेअर करा</Text></Pressable>
+            </View> : null}
+            <View style={[styles.signatureArea, { backgroundColor: colors.secondary }]}>
+              <View style={styles.signatureColumn}><Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text></View>
+              <View style={[styles.signatureColumn, styles.signatureRight]}><Text style={[styles.signatureText, { color: colors.foreground }]}>नाव: {profile.name || '—'}</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>आरोग्य सेवक</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text></View>
+            </View>
+          </View>
+          <View style={styles.secondReportSection}>
+            <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
+              <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="check-circle" size={18} color={colors.primary} /></View>
+              <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT SECTION 3</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>मोतीबिंदू शस्त्रक्रिया अहवाल</Text></View>
+              <Pressable testID="add-cataract-surgery-report" accessibilityRole="button" accessibilityLabel="नवीन मोतीबिंदू शस्त्रक्रिया नोंद जोडा" onPress={toggleCataractSurgeryForm} style={({ pressed }) => [styles.sectionAddButton, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}><Feather name={showCataractSurgeryForm ? 'x' : 'plus'} size={17} color={colors.primary} /></Pressable>
+            </View>
+            <View style={[styles.reportPaper, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.paperTop}>
+                <View style={styles.paperHeading}>
+                  <Text style={[styles.facilityName, { color: colors.foreground }]}>प्राथमिक आरोग्य केंद्र {profile.primaryHealthCenter || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>तालुका: {profile.taluka || '—'}  जिल्हा: {profile.district || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
+                </View>
+                <Text style={[styles.monthLabel, { color: colors.foreground }]}>{monthLabel}</Text>
+              </View>
+              <View style={[styles.reportTitleRule, { borderTopColor: colors.border }]} />
+              <Text style={[styles.reportTitle, { color: colors.foreground }]}>मोतीबिंदू शस्त्रक्रिया अहवाल</Text>
+              <Text style={[styles.reportSubtitle, { color: colors.mutedForeground }]}>{cataractSurgeryReports.length} रुग्णांच्या नोंदी</Text>
+            </View>
+            {showCataractSurgeryForm ? <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.formHeading}><View><Text style={[styles.formTitle, { color: colors.foreground }]}>{editingCataractSurgeryId ? 'शस्त्रक्रिया नोंद बदला' : 'नवीन शस्त्रक्रिया नोंद'}</Text><Text style={[styles.formHint, { color: colors.mutedForeground }]}>शस्त्रक्रिया झालेल्या रुग्णाची माहिती भरा.</Text></View><Feather name="check-circle" size={18} color={colors.primary} /></View>
+              <FormField label="रुग्णाचे नाव *" value={cataractSurgeryPersonName} onChangeText={setCataractSurgeryPersonName} placeholder="पूर्ण नाव" colors={colors} />
+              <View style={styles.twoColumns}>
+                <View style={styles.column}><FormField label="वय" value={cataractSurgeryAge} onChangeText={setCataractSurgeryAge} placeholder="वय" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><FormField label="लिंग" value={cataractSurgeryGender} onChangeText={setCataractSurgeryGender} placeholder="M / F" colors={colors} /></View>
+              </View>
+              <FormField label="गावाचे नाव" value={cataractSurgeryVillageName} onChangeText={setCataractSurgeryVillageName} placeholder="गाव" colors={colors} />
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>डोळा *</Text>
+              <View style={styles.eyeChoices}>
+                <EyeChoice label="उजवा" value="right" selected={cataractSurgeryEye === 'right'} onPress={() => setCataractSurgeryEye('right')} colors={colors} />
+                <EyeChoice label="डावा" value="left" selected={cataractSurgeryEye === 'left'} onPress={() => setCataractSurgeryEye('left')} colors={colors} />
+              </View>
+              <FormField label="शस्त्रक्रिया दिनांक" value={cataractSurgeryDate} onChangeText={setCataractSurgeryDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} />
+              <FormField label="शेरा" value={cataractSurgeryRemark} onChangeText={setCataractSurgeryRemark} placeholder="अतिरिक्त माहिती" colors={colors} />
+              <Pressable testID="save-cataract-surgery-report" onPress={saveCataractSurgeryReport} style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="check" size={17} color="#FFFFFF" /><Text style={styles.saveText}>{editingCataractSurgeryId ? 'बदल जतन करा' : 'नोंद जतन करा'}</Text></Pressable>
+            </View> : null}
+            <View style={styles.entriesHeader}>
+              <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>शस्त्रक्रिया झालेल्या रुग्णांच्या नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>उजवा / डावा डोळा आणि शस्त्रक्रिया दिनांक.</Text></View>
+              <View style={[styles.countPill, { backgroundColor: colors.secondary }]}><Text style={[styles.countPillText, { color: colors.primary }]}>{cataractSurgeryReports.length}</Text></View>
+            </View>
+            {cataractSurgeryReports.length ? cataractSurgeryReports.map((entry, index) => (
+              <CataractSurgeryEntryCard key={entry.id} entry={entry} index={index} colors={colors} onEdit={() => editCataractSurgeryReport(entry)} onRemove={() => Alert.alert('नोंद हटवायची?', `${entry.personName} यांची नोंद हटवायची आहे का?`, [{ text: 'रद्द करा', style: 'cancel' }, { text: 'हटवा', style: 'destructive', onPress: () => removeCataractSurgeryReport(entry.id) }])} />
+            )) : <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name="check-circle" size={24} color={colors.mutedForeground} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>अजून शस्त्रक्रिया नोंद नाही</Text><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>या sectionमधील + बटन दाबून नोंद जोडा.</Text></View>}
+            {cataractSurgeryReports.length ? <View style={[styles.exportCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.exportHeading}><View><Text style={[styles.exportTitle, { color: colors.foreground }]}>शस्त्रक्रिया रिपोर्ट तयार आहे?</Text><Text style={[styles.exportText, { color: colors.mutedForeground }]}>नोंदी तपासल्यानंतर PDF शेअर करा.</Text></View><Feather name="file-text" size={20} color={colors.primary} /></View>
+              <Pressable testID="share-cataract-surgery-report-pdf" onPress={() => void exportCataractSurgeryPdf()} style={({ pressed }) => [styles.exportButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="share-2" size={15} color="#FFFFFF" /><Text style={styles.exportButtonText}>PDF शेअर करा</Text></Pressable>
             </View> : null}
             <View style={[styles.signatureArea, { backgroundColor: colors.secondary }]}>
               <View style={styles.signatureColumn}><Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text></View>
@@ -375,12 +515,29 @@ function CataractEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: 
     <View style={styles.entryCopy}>
       <Text style={[styles.entryName, { color: colors.foreground }]}>{entry.personName}</Text>
       <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{entry.age || '—'} वर्षे · {entry.gender || '—'} · {entry.villageName || 'गाव नमूद नाही'}</Text>
-      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{eyeLabel} · {entry.searchDate || 'शोधण्याचा दिनांक बाकी'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{eyeLabel} · {entry.searchDate || 'शोधल्याचा दिनांक बाकी'}</Text>
       {entry.remark ? <Text style={[styles.entryCause, { color: colors.mutedForeground }]}>शेरा: {entry.remark}</Text> : null}
     </View>
     <View style={styles.entryActions}>
       <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची मोतीबिंदू नोंद बदला`} onPress={onEdit} hitSlop={10}><Feather name="edit-2" size={16} color={colors.primary} /></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची मोतीबिंदू नोंद हटवा`} onPress={onRemove} hitSlop={10}><Feather name="trash-2" size={16} color={colors.destructive} /></Pressable>
+    </View>
+  </View>;
+}
+
+function CataractSurgeryEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: CataractSurgeryReportEntry; index: number; colors: ReturnType<typeof useColors>; onEdit: () => void; onRemove: () => void }) {
+  const eyeLabel = entry.eye === 'right' ? 'उजवा डोळा' : entry.eye === 'left' ? 'डावा डोळा' : 'डोळा नमूद नाही';
+  return <View style={[styles.entryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.entryNumber, { backgroundColor: colors.secondary }]}><Text style={[styles.entryNumberText, { color: colors.primary }]}>{index + 1}</Text></View>
+    <View style={styles.entryCopy}>
+      <Text style={[styles.entryName, { color: colors.foreground }]}>{entry.personName}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{entry.age || '—'} वर्षे · {entry.gender || '—'} · {entry.villageName || 'गाव नमूद नाही'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{eyeLabel} · {entry.surgeryDate || 'शस्त्रक्रिया दिनांक बाकी'}</Text>
+      {entry.remark ? <Text style={[styles.entryCause, { color: colors.mutedForeground }]}>शेरा: {entry.remark}</Text> : null}
+    </View>
+    <View style={styles.entryActions}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची शस्त्रक्रिया नोंद बदला`} onPress={onEdit} hitSlop={10}><Feather name="edit-2" size={16} color={colors.primary} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची शस्त्रक्रिया नोंद हटवा`} onPress={onRemove} hitSlop={10}><Feather name="trash-2" size={16} color={colors.destructive} /></Pressable>
     </View>
   </View>;
 }
@@ -435,7 +592,58 @@ function buildCataractReportHtml({ profile, cataractReports, monthLabel }: { pro
       </div>
       <h1>संशयीत मोतीबिंदू अहवाल</h1>
       <table><thead><tr>
-        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>डोळा</th><th>शोधण्याचा दिनांक</th><th>शेरा</th>
+        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>डोळा</th><th>शोधल्याचा दिनांक</th><th>शेरा</th>
+      </tr></thead><tbody>${rows || '<tr><td colspan="8">कोणतीही नोंद नाही</td></tr>'}</tbody></table>
+      <div class="signatures">
+        <div>सविनय सादर<br>वैद्यकीय अधिकारी<br>प्राथमिक आरोग्य केंद्र: ${escapeHtml(profile.primaryHealthCenter || '—')}</div>
+        <div class="right">नाव: ${escapeHtml(profile.name || '—')}<br>आरोग्य सेवक<br>उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
+      </div>
+    </body></html>`;
+}
+
+function buildCataractSurgeryReportHtml({ profile, cataractSurgeryReports, monthLabel }: { profile: Profile; cataractSurgeryReports: CataractSurgeryReportEntry[]; monthLabel: string }) {
+  const rows = cataractSurgeryReports.map((entry, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(entry.personName)}</td>
+      <td>${escapeHtml(entry.age)}</td>
+      <td>${escapeHtml(entry.gender)}</td>
+      <td>${escapeHtml(entry.villageName)}</td>
+      <td>${escapeHtml(entry.eye === 'right' ? 'उजवा' : entry.eye === 'left' ? 'डावा' : '')}</td>
+      <td>${escapeHtml(entry.surgeryDate)}</td>
+      <td>${escapeHtml(entry.remark)}</td>
+    </tr>
+  `).join('');
+  return `<!doctype html>
+    <html><head><meta charset="utf-8"><title>मोतीबिंदू शस्त्रक्रिया अहवाल - ${escapeHtml(monthLabel)}</title>
+    <style>
+      @page { size: A4 landscape; margin: 16mm; }
+      body { font-family: Arial, sans-serif; color: #172033; margin: 0; }
+      .top { display: flex; justify-content: space-between; align-items: flex-start; }
+      .center { text-align: center; flex: 1; }
+      .facility { font-size: 18px; font-weight: 700; }
+      .meta { font-size: 12px; margin-top: 5px; }
+      .month { font-size: 13px; font-weight: 700; min-width: 130px; text-align: right; }
+      h1 { font-size: 20px; text-align: center; margin: 24px 0 16px; }
+      table { border-collapse: collapse; width: 100%; font-size: 11px; }
+      th, td { border: 1px solid #6f7785; padding: 8px 6px; text-align: center; vertical-align: middle; }
+      th { background: #eef2ff; font-weight: 700; }
+      td:nth-child(2), td:nth-child(5), td:nth-child(8) { text-align: left; }
+      .signatures { display: flex; justify-content: space-between; margin-top: 55px; font-size: 12px; line-height: 1.7; }
+      .right { text-align: right; }
+    </style></head><body>
+      <div class="top">
+        <div style="width:130px"></div>
+        <div class="center">
+          <div class="facility">${escapeHtml(`प्राथमिक आरोग्य केंद्र ${profile.primaryHealthCenter || '—'}`)}</div>
+          <div class="meta">तालुका: ${escapeHtml(profile.taluka || '—')} &nbsp;&nbsp; जिल्हा: ${escapeHtml(profile.district || '—')}</div>
+          <div class="meta">उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
+        </div>
+        <div class="month">${escapeHtml(monthLabel)}</div>
+      </div>
+      <h1>मोतीबिंदू शस्त्रक्रिया अहवाल</h1>
+      <table><thead><tr>
+        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>डोळा</th><th>शस्त्रक्रिया दिनांक</th><th>शेरा</th>
       </tr></thead><tbody>${rows || '<tr><td colspan="8">कोणतीही नोंद नाही</td></tr>'}</tbody></table>
       <div class="signatures">
         <div>सविनय सादर<br>वैद्यकीय अधिकारी<br>प्राथमिक आरोग्य केंद्र: ${escapeHtml(profile.primaryHealthCenter || '—')}</div>
