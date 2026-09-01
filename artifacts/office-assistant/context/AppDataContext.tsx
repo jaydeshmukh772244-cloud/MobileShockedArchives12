@@ -39,7 +39,7 @@ export interface CataractReportEntry {
   gender: string;
   villageName: string;
   eye: 'right' | 'left' | '';
-  surgeryDate: string;
+  searchDate: string;
   remark: string;
 }
 
@@ -155,7 +155,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             people?: Array<{ name: string; role: string; phone: string; email?: string; kind?: string }>;
             entries?: DiaryEntry[];
             deathReports?: DeathReportEntry[];
-            cataractReports?: CataractReportEntry[];
+            cataractReports?: Array<CataractReportEntry & { surgeryDate?: string }>;
             reportPeriod?: ReportPeriod;
           };
           if (saved.profile) {
@@ -184,7 +184,12 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           }
           if (Array.isArray(saved.entries)) setEntries(saved.entries);
           if (Array.isArray(saved.deathReports)) setDeathReports(saved.deathReports);
-          if (Array.isArray(saved.cataractReports)) setCataractReports(saved.cataractReports);
+          if (Array.isArray(saved.cataractReports)) {
+            setCataractReports(saved.cataractReports.map((entry) => ({
+              ...entry,
+              searchDate: entry.searchDate ?? entry.surgeryDate ?? '',
+            })));
+          }
           if (saved.reportPeriod && Number.isInteger(saved.reportPeriod.month) && saved.reportPeriod.month >= 1 && saved.reportPeriod.month <= 12 && Number.isInteger(saved.reportPeriod.year)) {
             setReportPeriod(saved.reportPeriod);
           }
