@@ -32,7 +32,7 @@ export default function ReportsScreen() {
   const [cataractGender, setCataractGender] = useState('');
   const [cataractVillageName, setCataractVillageName] = useState('');
   const [cataractEye, setCataractEye] = useState<'right' | 'left' | ''>('');
-  const [cataractSurgeryDate, setCataractSurgeryDate] = useState('');
+  const [cataractSearchDate, setCataractSearchDate] = useState('');
   const [cataractRemark, setCataractRemark] = useState('');
 
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function ReportsScreen() {
     setCataractGender('');
     setCataractVillageName('');
     setCataractEye('');
-    setCataractSurgeryDate('');
+    setCataractSearchDate('');
     setCataractRemark('');
   };
 
@@ -131,7 +131,7 @@ export default function ReportsScreen() {
       gender: cataractGender.trim(),
       villageName: cataractVillageName.trim(),
       eye: cataractEye,
-      surgeryDate: cataractSurgeryDate.trim(),
+      searchDate: cataractSearchDate.trim(),
       remark: cataractRemark.trim(),
     };
     if (editingCataractId) {
@@ -159,7 +159,7 @@ export default function ReportsScreen() {
     setCataractGender(entry.gender);
     setCataractVillageName(entry.villageName);
     setCataractEye(entry.eye);
-    setCataractSurgeryDate(entry.surgeryDate);
+    setCataractSearchDate(entry.searchDate);
     setCataractRemark(entry.remark);
     setShowCataractForm(true);
   };
@@ -321,12 +321,12 @@ export default function ReportsScreen() {
                 <EyeChoice label="उजवा" value="right" selected={cataractEye === 'right'} onPress={() => setCataractEye('right')} colors={colors} />
                 <EyeChoice label="डावा" value="left" selected={cataractEye === 'left'} onPress={() => setCataractEye('left')} colors={colors} />
               </View>
-              <FormField label="शस्त्रक्रियेचा दिनांक" value={cataractSurgeryDate} onChangeText={setCataractSurgeryDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} />
+              <FormField label="शोधण्याचा दिनांक" value={cataractSearchDate} onChangeText={setCataractSearchDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} />
               <FormField label="शेरा" value={cataractRemark} onChangeText={setCataractRemark} placeholder="अतिरिक्त माहिती" colors={colors} />
               <Pressable testID="save-cataract-report" onPress={saveCataractReport} style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="check" size={17} color="#FFFFFF" /><Text style={styles.saveText}>{editingCataractId ? 'बदल जतन करा' : 'नोंद जतन करा'}</Text></Pressable>
             </View> : null}
             <View style={styles.entriesHeader}>
-              <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>रुग्णांच्या नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>उजवा / डावा डोळा आणि शस्त्रक्रियेची तारीख.</Text></View>
+              <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>रुग्णांच्या नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>उजवा / डावा डोळा आणि शोधण्याचा दिनांक.</Text></View>
               <View style={[styles.countPill, { backgroundColor: colors.secondary }]}><Text style={[styles.countPillText, { color: colors.primary }]}>{cataractReports.length}</Text></View>
             </View>
             {cataractReports.length ? cataractReports.map((entry, index) => (
@@ -375,7 +375,7 @@ function CataractEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: 
     <View style={styles.entryCopy}>
       <Text style={[styles.entryName, { color: colors.foreground }]}>{entry.personName}</Text>
       <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{entry.age || '—'} वर्षे · {entry.gender || '—'} · {entry.villageName || 'गाव नमूद नाही'}</Text>
-      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{eyeLabel} · {entry.surgeryDate || 'शस्त्रक्रियेची तारीख बाकी'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{eyeLabel} · {entry.searchDate || 'शोधण्याचा दिनांक बाकी'}</Text>
       {entry.remark ? <Text style={[styles.entryCause, { color: colors.mutedForeground }]}>शेरा: {entry.remark}</Text> : null}
     </View>
     <View style={styles.entryActions}>
@@ -402,7 +402,7 @@ function buildCataractReportHtml({ profile, cataractReports, monthLabel }: { pro
       <td>${escapeHtml(entry.gender)}</td>
       <td>${escapeHtml(entry.villageName)}</td>
       <td>${escapeHtml(entry.eye === 'right' ? 'उजवा' : entry.eye === 'left' ? 'डावा' : '')}</td>
-      <td>${escapeHtml(entry.surgeryDate)}</td>
+      <td>${escapeHtml(entry.searchDate)}</td>
       <td>${escapeHtml(entry.remark)}</td>
     </tr>
   `).join('');
@@ -435,7 +435,7 @@ function buildCataractReportHtml({ profile, cataractReports, monthLabel }: { pro
       </div>
       <h1>संशयीत मोतीबिंदू अहवाल</h1>
       <table><thead><tr>
-        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>डोळा</th><th>शस्त्रक्रियेचा दिनांक</th><th>शेरा</th>
+        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>डोळा</th><th>शोधण्याचा दिनांक</th><th>शेरा</th>
       </tr></thead><tbody>${rows || '<tr><td colspan="8">कोणतीही नोंद नाही</td></tr>'}</tbody></table>
       <div class="signatures">
         <div>सविनय सादर<br>वैद्यकीय अधिकारी<br>प्राथमिक आरोग्य केंद्र: ${escapeHtml(profile.primaryHealthCenter || '—')}</div>
