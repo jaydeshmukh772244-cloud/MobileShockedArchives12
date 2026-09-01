@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
@@ -25,13 +25,38 @@ export default function ReportsScreen() {
   const [showPeriodEditor, setShowPeriodEditor] = useState(false);
   const [periodMonth, setPeriodMonth] = useState(String(reportPeriod.month));
   const [periodYear, setPeriodYear] = useState(String(reportPeriod.year));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [genderFilter, setGenderFilter] = useState<'all' | 'male' | 'female'>('all');
 
   useEffect(() => {
     setPeriodMonth(String(reportPeriod.month));
     setPeriodYear(String(reportPeriod.year));
   }, [reportPeriod]);
 
-  const monthLabel = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(reportPeriod.year, reportPeriod.month - 1, 1));
+  const monthLabel = new Intl.DateTimeFormat('mr-IN', { month: 'long', year: 'numeric' }).format(new Date(reportPeriod.year, reportPeriod.month - 1, 1));
+
+  const reportSummary = useMemo(() => {
+    const male = deathReports.filter((entry) => isGender(entry.gender, 'male')).length;
+    const female = deathReports.filter((entry) => isGender(entry.gender, 'female')).length;
+    return {
+      total: deathReports.length,
+      male,
+      female,
+      other: Math.max(deathReports.length - male - female, 0),
+    };
+  }, [deathReports]);
+
+  const filteredDeathReports = useMemo(() => {
+    const query = searchQuery.trim().toLocaleLowerCase('mr-IN');
+    return deathReports.filter((entry) => {
+      const matchesQuery = !query || [entry.personName, entry.villageName, entry.cause, entry.deathPlace, entry.remark]
+        .join(' ')
+        .toLocaleLowerCase('mr-IN')
+        .includes(query);
+      const matchesGender = genderFilter === 'all' || isGender(entry.gender, genderFilter);
+      return matchesQuery && matchesGender;
+    });
+  }, [deathReports, genderFilter, searchQuery]);
 
   const resetForm = () => {
     setPersonName('');
@@ -47,6 +72,10 @@ export default function ReportsScreen() {
   const saveDeathReport = () => {
     if (!personName.trim() || !deathDate.trim()) {
       Alert.alert('माहिती अपुरी आहे', 'मृत व्यक्तीचे नाव आणि मृत्यूची तारीख लिहा.');
+      return;
+    }
+    if (!isValidDateText(deathDate)) {
+      Alert.alert('तारीख तपासा', 'मृत्यूची तारीख DD/MM/YYYY या पद्धतीने भरा.');
       return;
     }
     const entry: Omit<DeathReportEntry, 'id'> = {
@@ -152,6 +181,11 @@ export default function ReportsScreen() {
               <Text style={[styles.periodButtonText, { color: colors.primary }]}>महिना / वर्ष बदला</Text>
             </Pressable>
           </View>
+          <View style={styles.summaryGrid}>
+            <SummaryCard label="एकूण नोंदी" value={reportSummary.total} icon="file-text" color={colors.primary} colors={colors} />
+            <SummaryCard label="पुरुष" value={reportSummary.male} icon="user" color="#5B7CFA" colors={colors} />
+            <SummaryCard label="महिला" value={reportSummary.female} icon="user" color="#B168D4" colors={colors} />
+          </View>
           {showPeriodEditor ? <View style={[styles.periodEditor, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.twoColumns}>
               <View style={styles.column}><FormField label="महिना (1-12)" value={periodMonth} onChangeText={setPeriodMonth} placeholder="उदा. 8" keyboardType="number-pad" colors={colors} /></View>
@@ -176,12 +210,45 @@ export default function ReportsScreen() {
             <Pressable testID="save-death-report" onPress={saveDeathReport} style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="check" size={17} color="#FFFFFF" /><Text style={styles.saveText}>{editingId ? 'बदल जतन करा' : 'मृत्यू नोंद जतन करा'}</Text></Pressable>
           </View> : null}
           <View style={styles.entriesHeader}>
-            <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>मृत्यू अहवाल नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>फोटोतील नमुन्याप्रमाणे प्रत्येक नोंद येथे दिसेल.</Text></View>
-            <View style={[styles.countPill, { backgroundColor: colors.secondary }]}><Text style={[styles.countPillText, { color: colors.primary }]}>{deathReports.length}</Text></View>
+             <View style={styles.entriesHeaderCopy}><Text style={[styles.entriesTitle, { color: colors.foreground }]}>मृत्यू अहवाल नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>{filteredDeathReports.length} नोंदी दिसत आहेत</Text></View>
+             <View style={[styles.countPill, { backgroundColor: colors.secondary }]}><Text style={[styles.countPillText, { color: colors.primary }]}>{filteredDeathReports.length}</Text></View>
           </View>
-          {deathReports.length ? deathReports.map((entry, index) => (
+           <View style={styles.searchRow}>
+             <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+               <Feather name="search" size={16} color={colors.mutedForeground} />
+               <TextInput
+                 testID="report-search"
+                 value={searchQuery}
+                 onChangeText={setSearchQuery}
+                 placeholder="नाव, गाव किंवा कारण शोधा"
+                 placeholderTextColor={colors.mutedForeground}
+                 style={[styles.searchInput, { color: colors.foreground }]}
+                 returnKeyType="search"
+               />
+               {searchQuery ? <Pressable accessibilityRole="button" accessibilityLabel="शोध पुसा" onPress={() => setSearchQuery('')} hitSlop={8}><Feather name="x-circle" size={16} color={colors.mutedForeground} /></Pressable> : null}
+             </View>
+           </View>
+           <View style={styles.filterRow}>
+             {([
+               { key: 'all' as const, label: 'सर्व' },
+               { key: 'male' as const, label: 'पुरुष' },
+               { key: 'female' as const, label: 'महिला' },
+             ]).map((filter) => (
+               <Pressable
+                 key={filter.key}
+                 testID={`report-filter-${filter.key}`}
+                 accessibilityRole="button"
+                 accessibilityState={{ selected: genderFilter === filter.key }}
+                 onPress={() => setGenderFilter(filter.key)}
+                 style={({ pressed }) => [styles.filterChip, { backgroundColor: genderFilter === filter.key ? colors.primary : colors.secondary, opacity: pressed ? 0.75 : 1 }]}
+               >
+                 <Text style={[styles.filterChipText, { color: genderFilter === filter.key ? '#FFFFFF' : colors.mutedForeground }]}>{filter.label}</Text>
+               </Pressable>
+             ))}
+           </View>
+           {filteredDeathReports.length ? filteredDeathReports.map((entry, index) => (
             <DeathEntryCard key={entry.id} entry={entry} index={index} colors={colors} onEdit={() => editDeathReport(entry)} onRemove={() => Alert.alert('नोंद हटवायची?', `${entry.personName} यांची नोंद हटवायची आहे का?`, [{ text: 'रद्द करा', style: 'cancel' }, { text: 'हटवा', style: 'destructive', onPress: () => removeDeathReport(entry.id) }])} />
-          )) : <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name="file-text" size={24} color={colors.mutedForeground} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>अजून मृत्यू नोंद नाही</Text><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>वरचे + बटन दाबून पहिली नोंद जोडा.</Text></View>}
+           )) : <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name={deathReports.length ? 'search' : 'file-text'} size={24} color={colors.mutedForeground} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>{deathReports.length ? 'नोंद सापडली नाही' : 'अजून मृत्यू नोंद नाही'}</Text><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{deathReports.length ? 'शोध किंवा filter बदलून पुन्हा प्रयत्न करा.' : 'वरचे + बटन दाबून पहिली नोंद जोडा.'}</Text></View>}
           {deathReports.length ? <View style={[styles.exportCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.exportHeading}><View><Text style={[styles.exportTitle, { color: colors.foreground }]}>पूर्ण रिपोर्ट तयार आहे?</Text><Text style={[styles.exportText, { color: colors.mutedForeground }]}>तपासल्यानंतर PDF सेव्ह किंवा शेअर करा.</Text></View><Feather name="file-text" size={20} color={colors.primary} /></View>
             <View style={styles.exportButtons}>
@@ -226,6 +293,31 @@ function DeathEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: Dea
       <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची नोंद हटवा`} onPress={onRemove} hitSlop={10}><Feather name="trash-2" size={16} color={colors.destructive} /></Pressable>
     </View>
   </View>;
+}
+
+function SummaryCard({ label, value, icon, color, colors }: { label: string; value: number; icon: 'file-text' | 'user'; color: string; colors: ReturnType<typeof useColors> }) {
+  return <View style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.summaryIcon, { backgroundColor: `${color}18` }]}><Feather name={icon} size={15} color={color} /></View>
+    <Text style={[styles.summaryValue, { color: colors.foreground }]}>{value}</Text>
+    <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{label}</Text>
+  </View>;
+}
+
+function isGender(value: string, gender: 'male' | 'female') {
+  const normalized = value.trim().toLocaleLowerCase('mr-IN');
+  const maleValues = ['m', 'male', 'man', 'पुरुष', 'पु'];
+  const femaleValues = ['f', 'female', 'woman', 'महिला', 'स्त्री', 'स्त्री'];
+  return (gender === 'male' ? maleValues : femaleValues).includes(normalized);
+}
+
+function isValidDateText(value: string) {
+  const match = value.trim().match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+  if (!match) return false;
+  const day = Number(match[1]);
+  const month = Number(match[2]);
+  const year = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 }
 
 const escapeHtml = (value: string) =>
@@ -302,6 +394,11 @@ const styles = StyleSheet.create({
   reportSubtitle: { fontFamily: 'Inter_400Regular', fontSize: 11, textAlign: 'center', marginTop: 4 },
   periodButton: { height: 34, borderRadius: 10, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 13 },
   periodButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 10 },
+  summaryGrid: { flexDirection: 'row', gap: 9, marginBottom: 18 },
+  summaryCard: { flex: 1, minWidth: 0, borderRadius: 16, borderWidth: 1, padding: 11 },
+  summaryIcon: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  summaryValue: { fontFamily: 'Inter_700Bold', fontSize: 20 },
+  summaryLabel: { fontFamily: 'Inter_400Regular', fontSize: 10, marginTop: 3 },
   periodEditor: { borderRadius: 17, borderWidth: 1, padding: 14, marginTop: -8, marginBottom: 18 },
   periodSaveButton: { height: 40, borderRadius: 11, alignItems: 'center', justifyContent: 'center', marginTop: -2 },
   formCard: { borderRadius: 19, borderWidth: 1, padding: 16, marginBottom: 18 },
@@ -316,10 +413,17 @@ const styles = StyleSheet.create({
   saveButton: { height: 44, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 2 },
   saveText: { color: '#FFFFFF', fontFamily: 'Inter_600SemiBold', fontSize: 13 },
   entriesHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 11 },
+  entriesHeaderCopy: { flex: 1, paddingRight: 8 },
   entriesTitle: { fontFamily: 'Inter_700Bold', fontSize: 16 },
   entriesSubtitle: { fontFamily: 'Inter_400Regular', fontSize: 10, marginTop: 4 },
   countPill: { minWidth: 31, height: 31, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   countPillText: { fontFamily: 'Inter_700Bold', fontSize: 13 },
+  searchRow: { marginBottom: 9 },
+  searchBox: { minHeight: 44, borderRadius: 12, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 8 },
+  searchInput: { flex: 1, height: 42, fontFamily: 'Inter_400Regular', fontSize: 12 },
+  filterRow: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  filterChip: { minHeight: 31, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14 },
+  filterChipText: { fontFamily: 'Inter_600SemiBold', fontSize: 10 },
   entryCard: { borderRadius: 17, borderWidth: 1, padding: 13, flexDirection: 'row', alignItems: 'flex-start', marginBottom: 9 },
   entryNumber: { width: 29, height: 29, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
   entryNumberText: { fontFamily: 'Inter_700Bold', fontSize: 12 },
