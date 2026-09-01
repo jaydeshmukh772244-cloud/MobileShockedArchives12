@@ -54,6 +54,18 @@ export interface CataractSurgeryReportEntry {
   remark: string;
 }
 
+export interface SputumSampleReportEntry {
+  id: string;
+  personName: string;
+  age: string;
+  gender: string;
+  villageName: string;
+  sampleCollectedDate: string;
+  sampleTestDate: string;
+  workerName: string;
+  testType: 'sputum' | 'cbnaat' | '';
+}
+
 export interface ReportPeriod {
   month: number;
   year: number;
@@ -74,6 +86,7 @@ interface AppDataContextValue {
   deathReports: DeathReportEntry[];
   cataractReports: CataractReportEntry[];
   cataractSurgeryReports: CataractSurgeryReportEntry[];
+  sputumSampleReports: SputumSampleReportEntry[];
   reportPeriod: ReportPeriod;
   hydrated: boolean;
   addEntry: (entry: Omit<DiaryEntry, 'id' | 'date'> & { date?: string }) => void;
@@ -88,6 +101,9 @@ interface AppDataContextValue {
   addCataractSurgeryReport: (report: Omit<CataractSurgeryReportEntry, 'id'>) => void;
   updateCataractSurgeryReport: (id: string, report: Omit<CataractSurgeryReportEntry, 'id'>) => void;
   removeCataractSurgeryReport: (id: string) => void;
+  addSputumSampleReport: (report: Omit<SputumSampleReportEntry, 'id'>) => void;
+  updateSputumSampleReport: (id: string, report: Omit<SputumSampleReportEntry, 'id'>) => void;
+  removeSputumSampleReport: (id: string) => void;
   updateReportPeriod: (period: ReportPeriod) => void;
   updateProfile: (profile: Profile) => void;
 }
@@ -158,6 +174,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   const [deathReports, setDeathReports] = useState<DeathReportEntry[]>([]);
   const [cataractReports, setCataractReports] = useState<CataractReportEntry[]>([]);
   const [cataractSurgeryReports, setCataractSurgeryReports] = useState<CataractSurgeryReportEntry[]>([]);
+  const [sputumSampleReports, setSputumSampleReports] = useState<SputumSampleReportEntry[]>([]);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>(defaultReportPeriod);
   const [hydrated, setHydrated] = useState(false);
 
@@ -173,6 +190,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             deathReports?: DeathReportEntry[];
             cataractReports?: Array<CataractReportEntry & { surgeryDate?: string }>;
             cataractSurgeryReports?: CataractSurgeryReportEntry[];
+            sputumSampleReports?: SputumSampleReportEntry[];
             reportPeriod?: ReportPeriod;
           };
           if (saved.profile) {
@@ -208,6 +226,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
             })));
           }
           if (Array.isArray(saved.cataractSurgeryReports)) setCataractSurgeryReports(saved.cataractSurgeryReports);
+          if (Array.isArray(saved.sputumSampleReports)) setSputumSampleReports(saved.sputumSampleReports);
           if (saved.reportPeriod && Number.isInteger(saved.reportPeriod.month) && saved.reportPeriod.month >= 1 && saved.reportPeriod.month <= 12 && Number.isInteger(saved.reportPeriod.year)) {
             setReportPeriod(saved.reportPeriod);
           }
@@ -223,8 +242,8 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries, deathReports, cataractReports, cataractSurgeryReports, reportPeriod }));
-  }, [profile, entries, deathReports, cataractReports, cataractSurgeryReports, reportPeriod, hydrated]);
+    void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, entries, deathReports, cataractReports, cataractSurgeryReports, sputumSampleReports, reportPeriod }));
+  }, [profile, entries, deathReports, cataractReports, cataractSurgeryReports, sputumSampleReports, reportPeriod, hydrated]);
 
   const value = useMemo<AppDataContextValue>(
     () => ({
@@ -233,6 +252,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       deathReports,
       cataractReports,
       cataractSurgeryReports,
+      sputumSampleReports,
       reportPeriod,
       hydrated,
       addEntry: (entry) =>
@@ -258,10 +278,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       addCataractSurgeryReport: (report) => setCataractSurgeryReports((current) => [...current, { ...report, id: makeId('cataract-surgery') }]),
       updateCataractSurgeryReport: (id, report) => setCataractSurgeryReports((current) => current.map((entry) => (entry.id === id ? { ...report, id } : entry))),
       removeCataractSurgeryReport: (id) => setCataractSurgeryReports((current) => current.filter((report) => report.id !== id)),
+      addSputumSampleReport: (report) => setSputumSampleReports((current) => [...current, { ...report, id: makeId('sputum') }]),
+      updateSputumSampleReport: (id, report) => setSputumSampleReports((current) => current.map((entry) => (entry.id === id ? { ...report, id } : entry))),
+      removeSputumSampleReport: (id) => setSputumSampleReports((current) => current.filter((report) => report.id !== id)),
       updateReportPeriod: (period) => setReportPeriod(period),
       updateProfile: (nextProfile) => setProfile(nextProfile),
     }),
-    [cataractReports, cataractSurgeryReports, deathReports, entries, hydrated, profile, reportPeriod],
+    [cataractReports, cataractSurgeryReports, deathReports, entries, hydrated, profile, reportPeriod, sputumSampleReports],
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
