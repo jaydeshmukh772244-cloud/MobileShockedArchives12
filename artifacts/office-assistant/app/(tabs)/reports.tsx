@@ -138,7 +138,7 @@ export default function ReportsScreen() {
           <View style={[styles.reportPaper, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.paperTop}>
               <View style={styles.paperHeading}>
-                <Text style={[styles.facilityName, { color: colors.foreground }]}>{profile.primaryHealthCenter || 'प्राथमिक आरोग्य केंद्र'}</Text>
+                <Text style={[styles.facilityName, { color: colors.foreground }]}>प्राथमिक आरोग्य केंद्र {profile.primaryHealthCenter || '—'}</Text>
                 <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>तालुका: {profile.taluka || '—'}  जिल्हा: {profile.district || '—'}</Text>
                 <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
               </View>
@@ -266,7 +266,7 @@ function buildDeathReportHtml({ profile, deathReports, monthLabel }: { profile: 
       <div class="top">
         <div style="width:130px"></div>
         <div class="center">
-          <div class="facility">${escapeHtml(profile.primaryHealthCenter || 'प्राथमिक आरोग्य केंद्र')}</div>
+           <div class="facility">${escapeHtml(`प्राथमिक आरोग्य केंद्र ${profile.primaryHealthCenter || '—'}`)}</div>
           <div class="meta">तालुका: ${escapeHtml(profile.taluka || '—')} &nbsp;&nbsp; जिल्हा: ${escapeHtml(profile.district || '—')}</div>
           <div class="meta">उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
         </div>
