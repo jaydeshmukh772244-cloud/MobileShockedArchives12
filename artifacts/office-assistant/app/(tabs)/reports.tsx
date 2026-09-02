@@ -5,13 +5,25 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useAppData } from '@/context/AppDataContext';
-import type { CataractReportEntry, CataractSurgeryReportEntry, DeathReportEntry, Profile, SputumSampleReportEntry } from '@/context/AppDataContext';
+import type { CataractReportEntry, CataractSurgeryReportEntry, DeathReportEntry, LeprosyReportEntry, Profile, SputumSampleReportEntry, Village, WaterTclReportEntry } from '@/context/AppDataContext';
 import { useColors } from '@/hooks/useColors';
+
+type ReportKey = 'death' | 'cataract' | 'cataractSurgery' | 'sputum' | 'leprosy' | 'waterTcl';
+
+const reportTitles: Record<ReportKey, string> = {
+  death: 'मृत्यू अहवाल',
+  cataract: 'संशयीत मोतीबिंदू अहवाल',
+  cataractSurgery: 'मोतीबिंदू शस्त्रक्रिया अहवाल',
+  sputum: 'थुकी नमुने अहवाल',
+  leprosy: 'संशयीत कुष्ठरुग्ण अहवाल',
+  waterTcl: 'पाणी नमुने व ओ.टी. अहवाल',
+};
 
 export default function ReportsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { profile, deathReports, addDeathReport, updateDeathReport, removeDeathReport, cataractReports, addCataractReport, updateCataractReport, removeCataractReport, cataractSurgeryReports, addCataractSurgeryReport, updateCataractSurgeryReport, removeCataractSurgeryReport, sputumSampleReports, addSputumSampleReport, updateSputumSampleReport, removeSputumSampleReport, reportPeriod, updateReportPeriod } = useAppData();
+  const { profile, deathReports, addDeathReport, updateDeathReport, removeDeathReport, cataractReports, addCataractReport, updateCataractReport, removeCataractReport, cataractSurgeryReports, addCataractSurgeryReport, updateCataractSurgeryReport, removeCataractSurgeryReport, sputumSampleReports, addSputumSampleReport, updateSputumSampleReport, removeSputumSampleReport, leprosyReports, addLeprosyReport, updateLeprosyReport, removeLeprosyReport, waterTclReports, addWaterTclReport, updateWaterTclReport, removeWaterTclReport, reportPeriod, updateReportPeriod } = useAppData();
+  const [activeReport, setActiveReport] = useState<ReportKey | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [personName, setPersonName] = useState('');
@@ -53,6 +65,28 @@ export default function ReportsScreen() {
   const [sputumTestDate, setSputumTestDate] = useState('');
   const [sputumWorkerName, setSputumWorkerName] = useState('');
   const [sputumTestType, setSputumTestType] = useState<'sputum' | 'cbnaat' | ''>('');
+  const [showLeprosyForm, setShowLeprosyForm] = useState(false);
+  const [editingLeprosyId, setEditingLeprosyId] = useState<string | null>(null);
+  const [leprosyPersonName, setLeprosyPersonName] = useState('');
+  const [leprosyAge, setLeprosyAge] = useState('');
+  const [leprosyGender, setLeprosyGender] = useState('');
+  const [leprosyVillageName, setLeprosyVillageName] = useState('');
+  const [leprosySpotCount, setLeprosySpotCount] = useState<'1-5' | 'more-than-5' | ''>('');
+  const [leprosySpotLocation, setLeprosySpotLocation] = useState('');
+  const [leprosySearchDate, setLeprosySearchDate] = useState('');
+  const [showWaterTclForm, setShowWaterTclForm] = useState(false);
+  const [editingWaterTclId, setEditingWaterTclId] = useState<string | null>(null);
+  const [waterVillageName, setWaterVillageName] = useState('');
+  const [waterPreviousBalance, setWaterPreviousBalance] = useState('');
+  const [waterReceivedThisMonth, setWaterReceivedThisMonth] = useState('');
+  const [waterTotalStock, setWaterTotalStock] = useState('');
+  const [waterUsedStock, setWaterUsedStock] = useState('');
+  const [waterClosingBalance, setWaterClosingBalance] = useState('');
+  const [waterSamplesCollected, setWaterSamplesCollected] = useState('');
+  const [waterSamplesSent, setWaterSamplesSent] = useState('');
+  const [waterTclSuitable, setWaterTclSuitable] = useState('');
+  const [waterTclUnsuitable, setWaterTclUnsuitable] = useState('');
+  const [waterRemark, setWaterRemark] = useState('');
 
   useEffect(() => {
     setPeriodMonth(String(reportPeriod.month));
@@ -294,6 +328,221 @@ export default function ReportsScreen() {
     setShowSputumForm(true);
   };
 
+  const resetLeprosyForm = () => {
+    setLeprosyPersonName('');
+    setLeprosyAge('');
+    setLeprosyGender('');
+    setLeprosyVillageName('');
+    setLeprosySpotCount('');
+    setLeprosySpotLocation('');
+    setLeprosySearchDate('');
+  };
+
+  const saveLeprosyReport = () => {
+    if (!leprosyPersonName.trim() || !leprosySpotCount) {
+      Alert.alert('माहिती अपुरी आहे', 'रुग्णाचे नाव आणि चट्ट्यांची संख्या निवडा.');
+      return;
+    }
+    const entry: Omit<LeprosyReportEntry, 'id'> = {
+      personName: leprosyPersonName.trim(),
+      age: leprosyAge.trim(),
+      gender: leprosyGender.trim(),
+      villageName: leprosyVillageName.trim(),
+      spotCount: leprosySpotCount,
+      spotLocation: leprosySpotLocation.trim(),
+      searchDate: leprosySearchDate.trim(),
+    };
+    if (editingLeprosyId) {
+      updateLeprosyReport(editingLeprosyId, entry);
+    } else {
+      addLeprosyReport(entry);
+    }
+    resetLeprosyForm();
+    setEditingLeprosyId(null);
+    setShowLeprosyForm(false);
+  };
+
+  const toggleLeprosyForm = () => {
+    if (showLeprosyForm) {
+      resetLeprosyForm();
+      setEditingLeprosyId(null);
+    }
+    setShowLeprosyForm((value) => !value);
+  };
+
+  const editLeprosyReport = (entry: LeprosyReportEntry) => {
+    setEditingLeprosyId(entry.id);
+    setLeprosyPersonName(entry.personName);
+    setLeprosyAge(entry.age);
+    setLeprosyGender(entry.gender);
+    setLeprosyVillageName(entry.villageName);
+    setLeprosySpotCount(entry.spotCount);
+    setLeprosySpotLocation(entry.spotLocation);
+    setLeprosySearchDate(entry.searchDate);
+    setShowLeprosyForm(true);
+  };
+
+  const exportLeprosyPdf = async () => {
+    const html = buildLeprosyReportHtml({ profile, leprosyReports, monthLabel });
+    try {
+      if (Platform.OS === 'web') {
+        window.print();
+        return;
+      }
+      const Print = await import('expo-print');
+      const Sharing = await import('expo-sharing');
+      const { uri } = await Print.printToFileAsync({ html });
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('PDF तयार आहे', 'या device वर share सुविधा उपलब्ध नाही.');
+        return;
+      }
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'संशयीत कुष्ठरुग्ण अहवाल शेअर करा',
+        UTI: 'com.adobe.pdf',
+      });
+    } catch (error) {
+      console.error('Leprosy PDF export failed', error);
+      Alert.alert('PDF तयार करता आला नाही', 'कृपया पुन्हा प्रयत्न करा.');
+    }
+  };
+
+  const resetWaterTclForm = () => {
+    setWaterVillageName('');
+    setWaterPreviousBalance('');
+    setWaterReceivedThisMonth('');
+    setWaterTotalStock('');
+    setWaterUsedStock('');
+    setWaterClosingBalance('');
+    setWaterSamplesCollected('');
+    setWaterSamplesSent('');
+    setWaterTclSuitable('');
+    setWaterTclUnsuitable('');
+    setWaterRemark('');
+  };
+
+  const saveWaterTclReport = () => {
+    if (!waterVillageName.trim()) {
+      Alert.alert('माहिती अपुरी आहे', 'गावाचे नाव भरा.');
+      return;
+    }
+    const entry: Omit<WaterTclReportEntry, 'id'> = {
+      villageName: waterVillageName.trim(),
+      previousBalance: waterPreviousBalance.trim(),
+      receivedThisMonth: waterReceivedThisMonth.trim(),
+      totalStock: waterTotalStock.trim(),
+      usedStock: waterUsedStock.trim(),
+      closingBalance: waterClosingBalance.trim(),
+      waterSamplesCollected: waterSamplesCollected.trim(),
+      waterSamplesSent: waterSamplesSent.trim(),
+      tclSuitable: waterTclSuitable.trim(),
+      tclUnsuitable: waterTclUnsuitable.trim(),
+      remark: waterRemark.trim(),
+    };
+    if (editingWaterTclId) {
+      updateWaterTclReport(editingWaterTclId, entry);
+    } else {
+      addWaterTclReport(entry);
+    }
+    resetWaterTclForm();
+    setEditingWaterTclId(null);
+    setShowWaterTclForm(false);
+  };
+
+  const toggleWaterTclForm = () => {
+    if (showWaterTclForm) {
+      resetWaterTclForm();
+      setEditingWaterTclId(null);
+    } else {
+      const firstProfileVillage = profile.villages.find((village) => village.name.trim())?.name.trim() || '';
+      if (firstProfileVillage) setWaterVillageName(firstProfileVillage);
+    }
+    setShowWaterTclForm((value) => !value);
+  };
+
+  const editWaterTclReport = (entry: WaterTclReportEntry) => {
+    setEditingWaterTclId(entry.id);
+    setWaterVillageName(entry.villageName);
+    setWaterPreviousBalance(entry.previousBalance);
+    setWaterReceivedThisMonth(entry.receivedThisMonth);
+    setWaterTotalStock(entry.totalStock);
+    setWaterUsedStock(entry.usedStock);
+    setWaterClosingBalance(entry.closingBalance);
+    setWaterSamplesCollected(entry.waterSamplesCollected);
+    setWaterSamplesSent(entry.waterSamplesSent);
+    setWaterTclSuitable(entry.tclSuitable);
+    setWaterTclUnsuitable(entry.tclUnsuitable);
+    setWaterRemark(entry.remark);
+    setShowWaterTclForm(true);
+  };
+
+  const exportWaterTclPdf = async () => {
+    const html = buildWaterTclReportHtml({ profile, waterTclReports, monthLabel });
+    try {
+      if (Platform.OS === 'web') {
+        window.print();
+        return;
+      }
+      const Print = await import('expo-print');
+      const Sharing = await import('expo-sharing');
+      const { uri } = await Print.printToFileAsync({ html });
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('PDF तयार आहे', 'या device वर share सुविधा उपलब्ध नाही.');
+        return;
+      }
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'पाणी नमुने व ओ.टी. अहवाल शेअर करा',
+        UTI: 'com.adobe.pdf',
+      });
+    } catch (error) {
+      console.error('Water and TCL PDF export failed', error);
+      Alert.alert('PDF तयार करता आला नाही', 'कृपया पुन्हा प्रयत्न करा.');
+    }
+  };
+
+  const exportCombinedReportsPdf = async () => {
+    const html = buildCombinedReportsHtml({
+      profile,
+      monthLabel,
+      deathReports,
+      cataractReports,
+      cataractSurgeryReports,
+      sputumSampleReports,
+      leprosyReports,
+      waterTclReports,
+    });
+    try {
+      if (Platform.OS === 'web') {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          Alert.alert('PDF तयार करता आला नाही', 'कृपया browser मध्ये pop-up परवानगी द्या.');
+          return;
+        }
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        return;
+      }
+      const Print = await import('expo-print');
+      const Sharing = await import('expo-sharing');
+      const { uri } = await Print.printToFileAsync({ html });
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert('PDF तयार आहे', 'या device वर share सुविधा उपलब्ध नाही.');
+        return;
+      }
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'सहा राष्ट्रीय कार्यक्रमाचा आढावा PDF शेअर करा',
+        UTI: 'com.adobe.pdf',
+      });
+    } catch (error) {
+      console.error('Combined reports PDF export failed', error);
+      Alert.alert('PDF तयार करता आला नाही', 'कृपया पुन्हा प्रयत्न करा.');
+    }
+  };
+
   const exportPdf = async (action: 'share' | 'save') => {
     const html = buildDeathReportHtml({ profile, deathReports, monthLabel });
     try {
@@ -397,11 +646,52 @@ export default function ReportsScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <KeyboardAwareScrollViewCompat bottomOffset={20} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: Platform.OS === 'web' ? 118 : insets.bottom + 100 }}>
-        <ScreenHeader eyebrow="सहा राष्ट्रीय कार्यक्रमाचा आढावा" title="रिपोर्ट" subtitle="तुमच्या आरोग्य केंद्राचा मासिक अहवाल तयार करा." actionIcon={showForm ? 'x' : 'plus'} onAction={toggleForm} />
+        <ScreenHeader eyebrow={activeReport ? 'सहा राष्ट्रीय कार्यक्रमाचा आढावा' : 'विशेष सेक्शन'} title={activeReport ? reportTitles[activeReport] : 'रिपोर्ट'} subtitle={activeReport ? 'माहिती भरा, जतन करा आणि PDF शेअर करा.' : 'तुमच्या आरोग्य केंद्राचा मासिक अहवाल तयार करा.'} actionIcon={activeReport ? 'arrow-left' : undefined} onAction={activeReport ? () => setActiveReport(null) : undefined} />
         <View style={styles.body}>
+          {activeReport === null ? <>
+            <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
+              <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="folder" size={18} color={colors.primary} /></View>
+              <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>SPECIAL SECTION</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>सहा राष्ट्रीय कार्यक्रमाचा आढावा</Text></View>
+              <Pressable testID="share-combined-reports-pdf" accessibilityRole="button" accessibilityLabel="सहा राष्ट्रीय कार्यक्रमाचा आढावा PDF शेअर करा" onPress={() => void exportCombinedReportsPdf()} style={({ pressed }) => [styles.sectionAddButton, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}><Feather name="file-text" size={17} color={colors.primary} /></Pressable>
+            </View>
+            <View style={[styles.reportPaper, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.paperTop}>
+                <View style={styles.paperHeading}>
+                  <Text style={[styles.facilityName, { color: colors.foreground }]}>प्राथमिक आरोग्य केंद्र {profile.primaryHealthCenter || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>तालुका: {profile.taluka || '—'}  जिल्हा: {profile.district || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
+                </View>
+                <Text style={[styles.monthLabel, { color: colors.foreground }]}>{monthLabel}</Text>
+              </View>
+              <View style={[styles.reportTitleRule, { borderTopColor: colors.border }]} />
+              <Text style={[styles.reportTitle, { color: colors.foreground }]}>सहा राष्ट्रीय कार्यक्रमाचा आढावा</Text>
+              <Text style={[styles.reportSubtitle, { color: colors.mutedForeground }]}>रिपोर्ट निवडण्यासाठी खालील नावावर touch करा</Text>
+              <Pressable onPress={() => setShowPeriodEditor((value) => !value)} style={({ pressed }) => [styles.periodButton, { borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}>
+                <Feather name="calendar" size={14} color={colors.primary} />
+                <Text style={[styles.periodButtonText, { color: colors.primary }]}>महिना / वर्ष बदला</Text>
+              </Pressable>
+            </View>
+            <View style={[styles.reportMenu, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <ReportMenuItem number="१" icon="file-text" title="मृत्यू अहवाल" count={deathReports.length} onPress={() => setActiveReport('death')} colors={colors} />
+              <ReportMenuItem number="२" icon="eye" title="संशयीत मोतीबिंदू अहवाल" count={cataractReports.length} onPress={() => setActiveReport('cataract')} colors={colors} />
+              <ReportMenuItem number="३" icon="check-circle" title="मोतीबिंदू शस्त्रक्रिया अहवाल" count={cataractSurgeryReports.length} onPress={() => setActiveReport('cataractSurgery')} colors={colors} />
+              <ReportMenuItem number="४" icon="activity" title="थुकी नमुने अहवाल" count={sputumSampleReports.length} onPress={() => setActiveReport('sputum')} colors={colors} />
+              <ReportMenuItem number="५" icon="heart" title="संशयीत कुष्ठरुग्ण अहवाल" count={leprosyReports.length} onPress={() => setActiveReport('leprosy')} colors={colors} />
+              <ReportMenuItem number="६" icon="droplet" title="पाणी नमुने व ओ.टी. अहवाल" count={waterTclReports.length} onPress={() => setActiveReport('waterTcl')} colors={colors} last />
+            </View>
+          </> : null}
+          {showPeriodEditor && activeReport === null ? <View style={[styles.periodEditor, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.twoColumns}>
+              <View style={styles.column}><FormField label="महिना (1-12)" value={periodMonth} onChangeText={setPeriodMonth} placeholder="उदा. 8" keyboardType="number-pad" colors={colors} /></View>
+              <View style={styles.column}><FormField label="वर्ष" value={periodYear} onChangeText={setPeriodYear} placeholder="उदा. 2026" keyboardType="number-pad" colors={colors} /></View>
+            </View>
+            <Pressable onPress={saveReportPeriod} style={({ pressed }) => [styles.periodSaveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Text style={styles.saveText}>Period जतन करा</Text></Pressable>
+          </View> : null}
+          {activeReport === 'death' ? <>
           <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
-            <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="folder" size={18} color={colors.primary} /></View>
-            <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT SECTION 1</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>सहा राष्ट्रीय कार्यक्रमाचा आढावा</Text></View>
+            <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="file-text" size={18} color={colors.primary} /></View>
+            <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT 1 OF 6</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>मृत्यू अहवाल</Text></View>
+            <Pressable testID="add-death-report" accessibilityRole="button" accessibilityLabel="नवीन मृत्यू नोंद जोडा" onPress={toggleForm} style={({ pressed }) => [styles.sectionAddButton, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}><Feather name={showForm ? 'x' : 'plus'} size={17} color={colors.primary} /></Pressable>
           </View>
           <View style={[styles.reportPaper, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.paperTop}>
@@ -415,25 +705,14 @@ export default function ReportsScreen() {
             <View style={[styles.reportTitleRule, { borderTopColor: colors.border }]} />
             <Text style={[styles.reportTitle, { color: colors.foreground }]}>मृत्यू अहवाल</Text>
             <Text style={[styles.reportSubtitle, { color: colors.mutedForeground }]}>{deathReports.length} नोंदी या महिन्यात</Text>
-            <Pressable onPress={() => setShowPeriodEditor((value) => !value)} style={({ pressed }) => [styles.periodButton, { borderColor: colors.border, opacity: pressed ? 0.7 : 1 }]}>
-              <Feather name="calendar" size={14} color={colors.primary} />
-              <Text style={[styles.periodButtonText, { color: colors.primary }]}>महिना / वर्ष बदला</Text>
-            </Pressable>
           </View>
-          {showPeriodEditor ? <View style={[styles.periodEditor, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <View style={styles.twoColumns}>
-              <View style={styles.column}><FormField label="महिना (1-12)" value={periodMonth} onChangeText={setPeriodMonth} placeholder="उदा. 8" keyboardType="number-pad" colors={colors} /></View>
-              <View style={styles.column}><FormField label="वर्ष" value={periodYear} onChangeText={setPeriodYear} placeholder="उदा. 2026" keyboardType="number-pad" colors={colors} /></View>
-            </View>
-            <Pressable onPress={saveReportPeriod} style={({ pressed }) => [styles.periodSaveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Text style={styles.saveText}>Period जतन करा</Text></Pressable>
-          </View> : null}
           {showForm ? <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.formHeading}><View><Text style={[styles.formTitle, { color: colors.foreground }]}>{editingId ? 'मृत्यू नोंद बदला' : 'नवीन मृत्यू नोंद'}</Text><Text style={[styles.formHint, { color: colors.mutedForeground }]}>{editingId ? 'बदल करून नोंद पुन्हा जतन करा.' : 'अहवालातील पुढील क्रमांकासाठी माहिती भरा.'}</Text></View><Feather name="edit-3" size={18} color={colors.primary} /></View>
             <FormField label="मृत व्यक्तीचे नाव *" value={personName} onChangeText={setPersonName} placeholder="पूर्ण नाव" colors={colors} />
-            <View style={styles.twoColumns}>
-              <View style={styles.column}><FormField label="वय" value={age} onChangeText={setAge} placeholder="वय" keyboardType="number-pad" colors={colors} /></View>
-              <View style={styles.column}><FormField label="लिंग" value={gender} onChangeText={setGender} placeholder="M / F" colors={colors} /></View>
-            </View>
+              <View style={styles.twoColumns}>
+                <View style={styles.column}><FormField label="वय" value={age} onChangeText={setAge} placeholder="वय" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><GenderField value={gender} onChange={setGender} colors={colors} /></View>
+              </View>
             <View style={styles.twoColumns}>
               <View style={styles.column}><FormField label="गावाचे नाव" value={villageName} onChangeText={setVillageName} placeholder="गाव" colors={colors} /></View>
               <View style={styles.column}><FormField label="मृत्यूचे ठिकाण" value={deathPlace} onChangeText={setDeathPlace} placeholder="ठिकाण" colors={colors} /></View>
@@ -469,7 +748,8 @@ export default function ReportsScreen() {
               <Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
             </View>
           </View>
-          <View style={styles.secondReportSection}>
+          </> : null}
+          {activeReport === 'cataract' ? <View style={styles.secondReportSection}>
             <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
               <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="eye" size={18} color={colors.primary} /></View>
               <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT SECTION 2</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>संशयीत मोतीबिंदू अहवाल</Text></View>
@@ -493,7 +773,7 @@ export default function ReportsScreen() {
               <FormField label="रुग्णाचे नाव *" value={cataractPersonName} onChangeText={setCataractPersonName} placeholder="पूर्ण नाव" colors={colors} />
               <View style={styles.twoColumns}>
                 <View style={styles.column}><FormField label="वय" value={cataractAge} onChangeText={setCataractAge} placeholder="वय" keyboardType="number-pad" colors={colors} /></View>
-                <View style={styles.column}><FormField label="लिंग" value={cataractGender} onChangeText={setCataractGender} placeholder="M / F" colors={colors} /></View>
+                <View style={styles.column}><GenderField value={cataractGender} onChange={setCataractGender} colors={colors} /></View>
               </View>
               <FormField label="गावाचे नाव" value={cataractVillageName} onChangeText={setCataractVillageName} placeholder="गाव" colors={colors} />
               <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>डोळा *</Text>
@@ -520,8 +800,8 @@ export default function ReportsScreen() {
               <View style={styles.signatureColumn}><Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text></View>
               <View style={[styles.signatureColumn, styles.signatureRight]}><Text style={[styles.signatureText, { color: colors.foreground }]}>नाव: {profile.name || '—'}</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>आरोग्य सेवक</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text></View>
             </View>
-          </View>
-          <View style={styles.secondReportSection}>
+           </View> : null}
+          {activeReport === 'cataractSurgery' ? <View style={styles.secondReportSection}>
             <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
               <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="check-circle" size={18} color={colors.primary} /></View>
               <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT SECTION 3</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>मोतीबिंदू शस्त्रक्रिया अहवाल</Text></View>
@@ -545,7 +825,7 @@ export default function ReportsScreen() {
               <FormField label="रुग्णाचे नाव *" value={cataractSurgeryPersonName} onChangeText={setCataractSurgeryPersonName} placeholder="पूर्ण नाव" colors={colors} />
               <View style={styles.twoColumns}>
                 <View style={styles.column}><FormField label="वय" value={cataractSurgeryAge} onChangeText={setCataractSurgeryAge} placeholder="वय" keyboardType="number-pad" colors={colors} /></View>
-                <View style={styles.column}><FormField label="लिंग" value={cataractSurgeryGender} onChangeText={setCataractSurgeryGender} placeholder="M / F" colors={colors} /></View>
+                <View style={styles.column}><GenderField value={cataractSurgeryGender} onChange={setCataractSurgeryGender} colors={colors} /></View>
               </View>
               <FormField label="गावाचे नाव" value={cataractSurgeryVillageName} onChangeText={setCataractSurgeryVillageName} placeholder="गाव" colors={colors} />
               <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>डोळा *</Text>
@@ -572,8 +852,8 @@ export default function ReportsScreen() {
               <View style={styles.signatureColumn}><Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text></View>
               <View style={[styles.signatureColumn, styles.signatureRight]}><Text style={[styles.signatureText, { color: colors.foreground }]}>नाव: {profile.name || '—'}</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>आरोग्य सेवक</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text></View>
             </View>
-          </View>
-          <View style={styles.secondReportSection}>
+           </View> : null}
+          {activeReport === 'sputum' ? <View style={styles.secondReportSection}>
             <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
               <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="activity" size={18} color={colors.primary} /></View>
               <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT SECTION 4</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>थुकी नमुने अहवाल</Text></View>
@@ -597,14 +877,14 @@ export default function ReportsScreen() {
               <FormField label="रुग्णाचे नाव *" value={sputumPersonName} onChangeText={setSputumPersonName} placeholder="पूर्ण नाव" colors={colors} />
               <View style={styles.twoColumns}>
                 <View style={styles.column}><FormField label="वय" value={sputumAge} onChangeText={setSputumAge} placeholder="वय" keyboardType="number-pad" colors={colors} /></View>
-                <View style={styles.column}><FormField label="लिंग" value={sputumGender} onChangeText={setSputumGender} placeholder="M / F" colors={colors} /></View>
+                <View style={styles.column}><GenderField value={sputumGender} onChange={setSputumGender} colors={colors} /></View>
               </View>
               <FormField label="गावाचे नाव" value={sputumVillageName} onChangeText={setSputumVillageName} placeholder="गाव" colors={colors} />
               <View style={styles.twoColumns}>
                 <View style={styles.column}><FormField label="थुकी नमुना घेतल्याचा दिनांक" value={sputumCollectedDate} onChangeText={setSputumCollectedDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} /></View>
-                <View style={styles.column}><FormField label="थुकी नमुना तपासणीचा दिनांक" value={sputumTestDate} onChangeText={setSputumTestDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><FormField label="थुंकी नमुना तपासणीसाठी पाठवलेला दिनांक" value={sputumTestDate} onChangeText={setSputumTestDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} /></View>
               </View>
-              <FormField label="तपासणी करणाऱ्या कर्मचाऱ्याचे नाव" value={sputumWorkerName} onChangeText={setSputumWorkerName} placeholder="कर्मचाऱ्याचे नाव" colors={colors} />
+              <FormField label="शोधणाऱ्या कर्मचाऱ्याचे नाव" value={sputumWorkerName} onChangeText={setSputumWorkerName} placeholder="कर्मचाऱ्याचे नाव" colors={colors} />
               <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>तपासणीचा प्रकार *</Text>
               <View style={styles.testTypeChoices}>
                 <TestTypeChoice label="Sputum" selected={sputumTestType === 'sputum'} onPress={() => setSputumTestType('sputum')} colors={colors} />
@@ -627,7 +907,117 @@ export default function ReportsScreen() {
               <View style={styles.signatureColumn}><Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text></View>
               <View style={[styles.signatureColumn, styles.signatureRight]}><Text style={[styles.signatureText, { color: colors.foreground }]}>नाव: {profile.name || '—'}</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>आरोग्य सेवक</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text></View>
             </View>
-          </View>
+           </View> : null}
+          {activeReport === 'leprosy' ? <View style={styles.secondReportSection}>
+            <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
+              <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="heart" size={18} color={colors.primary} /></View>
+              <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT SECTION 5</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>संशयीत कुष्ठरुग्ण अहवाल</Text></View>
+              <Pressable testID="add-leprosy-report" accessibilityRole="button" accessibilityLabel="नवीन कुष्ठरुग्ण नोंद जोडा" onPress={toggleLeprosyForm} style={({ pressed }) => [styles.sectionAddButton, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}><Feather name={showLeprosyForm ? 'x' : 'plus'} size={17} color={colors.primary} /></Pressable>
+            </View>
+            <View style={[styles.reportPaper, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.paperTop}>
+                <View style={styles.paperHeading}>
+                  <Text style={[styles.facilityName, { color: colors.foreground }]}>प्राथमिक आरोग्य केंद्र {profile.primaryHealthCenter || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>तालुका: {profile.taluka || '—'}  जिल्हा: {profile.district || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
+                </View>
+                <Text style={[styles.monthLabel, { color: colors.foreground }]}>{monthLabel}</Text>
+              </View>
+              <View style={[styles.reportTitleRule, { borderTopColor: colors.border }]} />
+              <Text style={[styles.reportTitle, { color: colors.foreground }]}>संशयीत कुष्ठरुग्ण अहवाल</Text>
+              <Text style={[styles.reportSubtitle, { color: colors.mutedForeground }]}>{leprosyReports.length} रुग्णांच्या नोंदी</Text>
+            </View>
+            {showLeprosyForm ? <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.formHeading}><View><Text style={[styles.formTitle, { color: colors.foreground }]}>{editingLeprosyId ? 'कुष्ठरुग्ण नोंद बदला' : 'नवीन कुष्ठरुग्ण नोंद'}</Text><Text style={[styles.formHint, { color: colors.mutedForeground }]}>चित्रातील नमुन्याप्रमाणे संशयीत रुग्णाची माहिती भरा.</Text></View><Feather name="heart" size={18} color={colors.primary} /></View>
+              <FormField label="रुग्णाचे नाव *" value={leprosyPersonName} onChangeText={setLeprosyPersonName} placeholder="पूर्ण नाव" colors={colors} />
+              <View style={styles.twoColumns}>
+                <View style={styles.column}><FormField label="वय" value={leprosyAge} onChangeText={setLeprosyAge} placeholder="वय" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><GenderField value={leprosyGender} onChange={setLeprosyGender} colors={colors} /></View>
+              </View>
+              <FormField label="गावाचे नाव" value={leprosyVillageName} onChangeText={setLeprosyVillageName} placeholder="गाव" colors={colors} />
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>चट्टे *</Text>
+              <View style={styles.testTypeChoices}>
+                <SpotCountChoice label="१ ते ५" selected={leprosySpotCount === '1-5'} onPress={() => setLeprosySpotCount('1-5')} colors={colors} />
+                <SpotCountChoice label="५ पेक्षा जास्त" selected={leprosySpotCount === 'more-than-5'} onPress={() => setLeprosySpotCount('more-than-5')} colors={colors} />
+              </View>
+              <FormField label="चट्ट्याचे ठिकाण" value={leprosySpotLocation} onChangeText={setLeprosySpotLocation} placeholder="उदा. हात / पाय / पाठ" colors={colors} />
+              <FormField label="शोधल्याचा दिनांक" value={leprosySearchDate} onChangeText={setLeprosySearchDate} placeholder="DD/MM/YYYY" keyboardType="number-pad" colors={colors} />
+              <Pressable testID="save-leprosy-report" onPress={saveLeprosyReport} style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="check" size={17} color="#FFFFFF" /><Text style={styles.saveText}>{editingLeprosyId ? 'बदल जतन करा' : 'नोंद जतन करा'}</Text></Pressable>
+            </View> : null}
+            <View style={styles.entriesHeader}>
+              <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>कुष्ठरुग्णांच्या नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>चट्ट्यांची संख्या, ठिकाण आणि शोधल्याचा दिनांक.</Text></View>
+              <View style={[styles.countPill, { backgroundColor: colors.secondary }]}><Text style={[styles.countPillText, { color: colors.primary }]}>{leprosyReports.length}</Text></View>
+            </View>
+            {leprosyReports.length ? leprosyReports.map((entry, index) => (
+              <LeprosyEntryCard key={entry.id} entry={entry} index={index} colors={colors} onEdit={() => editLeprosyReport(entry)} onRemove={() => Alert.alert('नोंद हटवायची?', `${entry.personName} यांची नोंद हटवायची आहे का?`, [{ text: 'रद्द करा', style: 'cancel' }, { text: 'हटवा', style: 'destructive', onPress: () => removeLeprosyReport(entry.id) }])} />
+            )) : <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name="heart" size={24} color={colors.mutedForeground} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>अजून कुष्ठरुग्ण नोंद नाही</Text><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>या sectionमधील + बटन दाबून नोंद जोडा.</Text></View>}
+            {leprosyReports.length ? <View style={[styles.exportCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.exportHeading}><View><Text style={[styles.exportTitle, { color: colors.foreground }]}>कुष्ठरुग्ण रिपोर्ट तयार आहे?</Text><Text style={[styles.exportText, { color: colors.mutedForeground }]}>नोंदी तपासल्यानंतर PDF शेअर करा.</Text></View><Feather name="file-text" size={20} color={colors.primary} /></View>
+              <Pressable testID="share-leprosy-report-pdf" onPress={() => void exportLeprosyPdf()} style={({ pressed }) => [styles.exportButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="share-2" size={15} color="#FFFFFF" /><Text style={styles.exportButtonText}>PDF शेअर करा</Text></Pressable>
+            </View> : null}
+            <View style={[styles.signatureArea, { backgroundColor: colors.secondary }]}>
+              <View style={styles.signatureColumn}><Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text></View>
+              <View style={[styles.signatureColumn, styles.signatureRight]}><Text style={[styles.signatureText, { color: colors.foreground }]}>नाव: {profile.name || '—'}</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>आरोग्य सेवक</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text></View>
+            </View>
+           </View> : null}
+          {activeReport === 'waterTcl' ? <View style={styles.secondReportSection}>
+            <View style={[styles.sectionBanner, { backgroundColor: colors.secondary }]}>
+              <View style={[styles.sectionIcon, { backgroundColor: colors.card }]}><Feather name="droplet" size={18} color={colors.primary} /></View>
+              <View style={styles.sectionCopy}><Text style={[styles.sectionEyebrow, { color: colors.primary }]}>REPORT SECTION 6</Text><Text style={[styles.sectionTitle, { color: colors.foreground }]}>पाणी नमुने व ओ.टी. अहवाल</Text></View>
+              <Pressable testID="add-water-tcl-report" accessibilityRole="button" accessibilityLabel="नवीन पाणी नमुने व ओ.टी. नोंद जोडा" onPress={toggleWaterTclForm} style={({ pressed }) => [styles.sectionAddButton, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}><Feather name={showWaterTclForm ? 'x' : 'plus'} size={17} color={colors.primary} /></Pressable>
+            </View>
+            <View style={[styles.reportPaper, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.paperTop}>
+                <View style={styles.paperHeading}>
+                  <Text style={[styles.facilityName, { color: colors.foreground }]}>प्राथमिक आरोग्य केंद्र {profile.primaryHealthCenter || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>तालुका: {profile.taluka || '—'}  जिल्हा: {profile.district || '—'}</Text>
+                  <Text style={[styles.facilityMeta, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text>
+                </View>
+                <Text style={[styles.monthLabel, { color: colors.foreground }]}>{monthLabel}</Text>
+              </View>
+              <View style={[styles.reportTitleRule, { borderTopColor: colors.border }]} />
+              <Text style={[styles.reportTitle, { color: colors.foreground }]}>पाणी नमुने व ओ.टी. अहवाल</Text>
+              <Text style={[styles.reportSubtitle, { color: colors.mutedForeground }]}>{waterTclReports.length} गावांच्या नोंदी</Text>
+            </View>
+            {showWaterTclForm ? <View style={[styles.formCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.formHeading}><View><Text style={[styles.formTitle, { color: colors.foreground }]}>{editingWaterTclId ? 'पाणी नमुने व ओ.टी. नोंद बदला' : 'नवीन पाणी नमुने व ओ.टी. नोंद'}</Text><Text style={[styles.formHint, { color: colors.mutedForeground }]}>चित्रातील नमुन्याप्रमाणे गावनिहाय साठा आणि नमुना माहिती भरा.</Text></View><Feather name="droplet" size={18} color={colors.primary} /></View>
+              <VillageChoiceField value={waterVillageName} villages={profile.villages} onChange={setWaterVillageName} colors={colors} />
+              <View style={styles.twoColumns}>
+                <View style={styles.column}><FormField label="मागील शिल्लक" value={waterPreviousBalance} onChangeText={setWaterPreviousBalance} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><FormField label="चालू महिन्यात मिळालेला साठा" value={waterReceivedThisMonth} onChangeText={setWaterReceivedThisMonth} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+              </View>
+              <View style={styles.twoColumns}>
+                <View style={styles.column}><FormField label="एकूण साठा" value={waterTotalStock} onChangeText={setWaterTotalStock} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><FormField label="खर्च साठा" value={waterUsedStock} onChangeText={setWaterUsedStock} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+              </View>
+              <FormField label="महिन्याखेर शिल्लक साठा" value={waterClosingBalance} onChangeText={setWaterClosingBalance} placeholder="संख्या" keyboardType="number-pad" colors={colors} />
+              <View style={styles.twoColumns}>
+                <View style={styles.column}><FormField label="पाणी नमुने - मा." value={waterSamplesCollected} onChangeText={setWaterSamplesCollected} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><FormField label="पाणी नमुने - प्र." value={waterSamplesSent} onChangeText={setWaterSamplesSent} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+              </View>
+              <View style={styles.twoColumns}>
+                <View style={styles.column}><FormField label="ओ.टी. - योग्य" value={waterTclSuitable} onChangeText={setWaterTclSuitable} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+                <View style={styles.column}><FormField label="ओ.टी. - अयोग्य" value={waterTclUnsuitable} onChangeText={setWaterTclUnsuitable} placeholder="संख्या" keyboardType="number-pad" colors={colors} /></View>
+              </View>
+              <FormField label="शेरा" value={waterRemark} onChangeText={setWaterRemark} placeholder="अतिरिक्त माहिती" colors={colors} />
+              <Pressable testID="save-water-tcl-report" onPress={saveWaterTclReport} style={({ pressed }) => [styles.saveButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="check" size={17} color="#FFFFFF" /><Text style={styles.saveText}>{editingWaterTclId ? 'बदल जतन करा' : 'नोंद जतन करा'}</Text></Pressable>
+            </View> : null}
+            <View style={styles.entriesHeader}>
+              <View><Text style={[styles.entriesTitle, { color: colors.foreground }]}>गावनिहाय नोंदी</Text><Text style={[styles.entriesSubtitle, { color: colors.mutedForeground }]}>साठा, पाणी नमुने आणि ओ.टी. तपशील.</Text></View>
+              <View style={[styles.countPill, { backgroundColor: colors.secondary }]}><Text style={[styles.countPillText, { color: colors.primary }]}>{waterTclReports.length}</Text></View>
+            </View>
+            {waterTclReports.length ? waterTclReports.map((entry, index) => (
+              <WaterTclEntryCard key={entry.id} entry={entry} index={index} colors={colors} onEdit={() => editWaterTclReport(entry)} onRemove={() => Alert.alert('नोंद हटवायची?', `${entry.villageName} गावाची नोंद हटवायची आहे का?`, [{ text: 'रद्द करा', style: 'cancel' }, { text: 'हटवा', style: 'destructive', onPress: () => removeWaterTclReport(entry.id) }])} />
+            )) : <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name="droplet" size={24} color={colors.mutedForeground} /><Text style={[styles.emptyTitle, { color: colors.foreground }]}>अजून पाणी नमुना नोंद नाही</Text><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>या sectionमधील + बटन दाबून गावाची नोंद जोडा.</Text></View>}
+            {waterTclReports.length ? <View style={[styles.exportCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.exportHeading}><View><Text style={[styles.exportTitle, { color: colors.foreground }]}>पाणी नमुने व ओ.टी. रिपोर्ट तयार आहे?</Text><Text style={[styles.exportText, { color: colors.mutedForeground }]}>नोंदी तपासल्यानंतर PDF शेअर करा.</Text></View><Feather name="file-text" size={20} color={colors.primary} /></View>
+              <Pressable testID="share-water-tcl-report-pdf" onPress={() => void exportWaterTclPdf()} style={({ pressed }) => [styles.exportButton, { backgroundColor: colors.primary, opacity: pressed ? 0.78 : 1 }]}><Feather name="share-2" size={15} color="#FFFFFF" /><Text style={styles.exportButtonText}>PDF शेअर करा</Text></Pressable>
+            </View> : null}
+            <View style={[styles.signatureArea, { backgroundColor: colors.secondary }]}>
+              <View style={styles.signatureColumn}><Text style={[styles.signatureText, { color: colors.foreground }]}>सविनय सादर</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>वैद्यकीय अधिकारी</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>प्राथमिक आरोग्य केंद्र: {profile.primaryHealthCenter || '—'}</Text></View>
+              <View style={[styles.signatureColumn, styles.signatureRight]}><Text style={[styles.signatureText, { color: colors.foreground }]}>नाव: {profile.name || '—'}</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>आरोग्य सेवक</Text><Text style={[styles.signatureText, { color: colors.mutedForeground }]}>उपकेंद्र: {profile.subCenter || '—'}</Text></View>
+            </View>
+           </View> : null}
         </View>
       </KeyboardAwareScrollViewCompat>
     </View>
@@ -636,6 +1026,46 @@ export default function ReportsScreen() {
 
 function FormField({ label, value, onChangeText, placeholder, keyboardType, colors }: { label: string; value: string; onChangeText: (value: string) => void; placeholder: string; keyboardType?: 'default' | 'number-pad'; colors: ReturnType<typeof useColors> }) {
   return <View style={styles.field}><Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{label}</Text><TextInput value={value} onChangeText={onChangeText} placeholder={placeholder} keyboardType={keyboardType} placeholderTextColor={colors.mutedForeground} style={[styles.fieldInput, { backgroundColor: colors.background, borderColor: colors.input, color: colors.foreground }]} /></View>;
+}
+
+function VillageChoiceField({ value, villages, onChange, colors }: { value: string; villages: Village[]; onChange: (value: string) => void; colors: ReturnType<typeof useColors> }) {
+  const availableVillages = villages.filter((village) => village.name.trim());
+  return <View style={styles.field}>
+    <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>गावाचे नाव *</Text>
+    {availableVillages.length ? <View style={styles.villageChoices}>
+      {availableVillages.map((village) => {
+        const selected = value === village.name.trim();
+        return <Pressable key={village.id} accessibilityRole="radio" accessibilityState={{ selected }} accessibilityLabel={`${village.name} गाव निवडा`} onPress={() => onChange(village.name.trim())} style={({ pressed }) => [styles.villageChoice, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.secondary : colors.background, opacity: pressed ? 0.75 : 1 }]}>
+          <Feather name={selected ? 'check-circle' : 'circle'} size={16} color={selected ? colors.primary : colors.mutedForeground} />
+          <Text style={[styles.villageChoiceText, { color: selected ? colors.primary : colors.foreground }]}>{village.name.trim()}</Text>
+        </Pressable>;
+      })}
+    </View> : <View style={[styles.noVillagesNotice, { backgroundColor: colors.secondary }]}>
+      <Feather name="info" size={15} color={colors.primary} />
+      <Text style={[styles.noVillagesText, { color: colors.foreground }]}>प्रोफाइलमध्ये अजून गावे जोडलेली नाहीत. आधी प्रोफाइलमध्ये गावांची नोंद करा.</Text>
+    </View>}
+    {value ? <Text style={[styles.selectedVillageText, { color: colors.primary }]}>निवडलेले गाव: {value}</Text> : null}
+  </View>;
+}
+
+function ReportMenuItem({ number, icon, title, count, onPress, colors, last = false }: { number: string; icon: keyof typeof Feather.glyphMap; title: string; count: number; onPress: () => void; colors: ReturnType<typeof useColors>; last?: boolean }) {
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${title} उघडा`} onPress={onPress} style={({ pressed }) => [styles.reportMenuItem, !last && { borderBottomColor: colors.border, borderBottomWidth: 1 }, { opacity: pressed ? 0.72 : 1 }]}>
+    <View style={[styles.reportMenuNumber, { backgroundColor: colors.secondary }]}><Text style={[styles.reportMenuNumberText, { color: colors.primary }]}>{number}</Text></View>
+    <View style={[styles.reportMenuIcon, { backgroundColor: colors.background }]}><Feather name={icon} size={17} color={colors.primary} /></View>
+    <Text style={[styles.reportMenuTitle, { color: colors.foreground }]}>{title}</Text>
+    <View style={[styles.reportMenuCount, { backgroundColor: colors.secondary }]}><Text style={[styles.reportMenuCountText, { color: colors.primary }]}>{count}</Text></View>
+    <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+  </Pressable>;
+}
+
+function GenderField({ value, onChange, colors }: { value: string; onChange: (value: string) => void; colors: ReturnType<typeof useColors> }) {
+  return <View style={styles.field}>
+    <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>लिंग</Text>
+    <View style={styles.genderChoices}>
+      <TestTypeChoice label="M" selected={value === 'M'} onPress={() => onChange('M')} colors={colors} />
+      <TestTypeChoice label="F" selected={value === 'F'} onPress={() => onChange('F')} colors={colors} />
+    </View>
+  </View>;
 }
 
 function DeathEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: DeathReportEntry; index: number; colors: ReturnType<typeof useColors>; onEdit: () => void; onRemove: () => void }) {
@@ -695,12 +1125,47 @@ function SputumEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: Sp
     <View style={styles.entryCopy}>
       <Text style={[styles.entryName, { color: colors.foreground }]}>{entry.personName}</Text>
       <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{entry.age || '—'} वर्षे · {entry.gender || '—'} · {entry.villageName || 'गाव नमूद नाही'}</Text>
-      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{entry.testType === 'cbnaat' ? 'CBNAAT' : 'Sputum'} · नमुना: {entry.sampleCollectedDate || '—'} · तपासणी: {entry.sampleTestDate || '—'}</Text>
-      {entry.workerName ? <Text style={[styles.entryCause, { color: colors.mutedForeground }]}>कर्मचारी: {entry.workerName}</Text> : null}
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{entry.testType === 'cbnaat' ? 'CBNAAT' : 'Sputum'} · नमुना: {entry.sampleCollectedDate || '—'} · पाठवलेला दिनांक: {entry.sampleTestDate || '—'}</Text>
+      {entry.workerName ? <Text style={[styles.entryCause, { color: colors.mutedForeground }]}>शोधणारा कर्मचारी: {entry.workerName}</Text> : null}
     </View>
     <View style={styles.entryActions}>
       <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची थुकी नमुना नोंद बदला`} onPress={onEdit} hitSlop={10}><Feather name="edit-2" size={16} color={colors.primary} /></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची थुकी नमुना नोंद हटवा`} onPress={onRemove} hitSlop={10}><Feather name="trash-2" size={16} color={colors.destructive} /></Pressable>
+    </View>
+  </View>;
+}
+
+function LeprosyEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: LeprosyReportEntry; index: number; colors: ReturnType<typeof useColors>; onEdit: () => void; onRemove: () => void }) {
+  const spotCountLabel = entry.spotCount === 'more-than-5' ? '५ पेक्षा जास्त' : entry.spotCount === '1-5' ? '१ ते ५' : 'नमूद नाही';
+  return <View style={[styles.entryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.entryNumber, { backgroundColor: colors.secondary }]}><Text style={[styles.entryNumberText, { color: colors.primary }]}>{index + 1}</Text></View>
+    <View style={styles.entryCopy}>
+      <Text style={[styles.entryName, { color: colors.foreground }]}>{entry.personName}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>{entry.age || '—'} वर्षे · {entry.gender || '—'} · {entry.villageName || 'गाव नमूद नाही'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>चट्टे: {spotCountLabel} · ठिकाण: {entry.spotLocation || 'नमूद नाही'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>शोधल्याचा दिनांक: {entry.searchDate || '—'}</Text>
+    </View>
+    <View style={styles.entryActions}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची कुष्ठरुग्ण नोंद बदला`} onPress={onEdit} hitSlop={10}><Feather name="edit-2" size={16} color={colors.primary} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${entry.personName} ची कुष्ठरुग्ण नोंद हटवा`} onPress={onRemove} hitSlop={10}><Feather name="trash-2" size={16} color={colors.destructive} /></Pressable>
+    </View>
+  </View>;
+}
+
+function WaterTclEntryCard({ entry, index, colors, onEdit, onRemove }: { entry: WaterTclReportEntry; index: number; colors: ReturnType<typeof useColors>; onEdit: () => void; onRemove: () => void }) {
+  return <View style={[styles.entryCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+    <View style={[styles.entryNumber, { backgroundColor: colors.secondary }]}><Text style={[styles.entryNumberText, { color: colors.primary }]}>{index + 1}</Text></View>
+    <View style={styles.entryCopy}>
+      <Text style={[styles.entryName, { color: colors.foreground }]}>{entry.villageName}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>मागील: {entry.previousBalance || '—'} · मिळालेले: {entry.receivedThisMonth || '—'} · एकूण: {entry.totalStock || '—'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>खर्च: {entry.usedStock || '—'} · महिनाअखेर शिल्लक: {entry.closingBalance || '—'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>पाणी नमुने मा.: {entry.waterSamplesCollected || '—'} · प्र.: {entry.waterSamplesSent || '—'}</Text>
+      <Text style={[styles.entryMeta, { color: colors.mutedForeground }]}>ओ.टी. योग्य: {entry.tclSuitable || '—'} · अयोग्य: {entry.tclUnsuitable || '—'}</Text>
+      {entry.remark ? <Text style={[styles.entryCause, { color: colors.mutedForeground }]}>शेरा: {entry.remark}</Text> : null}
+    </View>
+    <View style={styles.entryActions}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${entry.villageName} गावाची पाणी नमुना नोंद बदला`} onPress={onEdit} hitSlop={10}><Feather name="edit-2" size={16} color={colors.primary} /></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${entry.villageName} गावाची पाणी नमुना नोंद हटवा`} onPress={onRemove} hitSlop={10}><Feather name="trash-2" size={16} color={colors.destructive} /></Pressable>
     </View>
   </View>;
 }
@@ -718,6 +1183,143 @@ function TestTypeChoice({ label, selected, onPress, colors }: { label: string; s
     <View style={[styles.eyeChoiceDot, { borderColor: selected ? colors.primary : colors.mutedForeground, backgroundColor: selected ? colors.primary : 'transparent' }]} />
     <Text style={[styles.testTypeText, { color: selected ? colors.primary : colors.mutedForeground }]}>{label}</Text>
   </Pressable>;
+}
+
+function SpotCountChoice({ label, selected, onPress, colors }: { label: string; selected: boolean; onPress: () => void; colors: ReturnType<typeof useColors> }) {
+  return <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: selected }} onPress={onPress} style={({ pressed }) => [styles.testTypeChoice, { borderColor: selected ? colors.primary : colors.border, backgroundColor: selected ? colors.secondary : colors.background, opacity: pressed ? 0.75 : 1 }]}>
+    <Feather name={selected ? 'check-square' : 'square'} size={17} color={selected ? colors.primary : colors.mutedForeground} />
+    <Text style={[styles.testTypeText, { color: selected ? colors.primary : colors.mutedForeground }]}>{label}</Text>
+  </Pressable>;
+}
+
+const sumWaterValues = (values: string[]) => {
+  const numbers = values.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+  return numbers.length ? String(numbers.reduce((total, value) => total + value, 0)) : '';
+};
+
+function buildWaterTclReportHtml({ profile, waterTclReports, monthLabel }: { profile: Profile; waterTclReports: WaterTclReportEntry[]; monthLabel: string }) {
+  const rows = waterTclReports.map((entry, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(entry.villageName)}</td>
+      <td>${escapeHtml(entry.previousBalance)}</td>
+      <td>${escapeHtml(entry.receivedThisMonth)}</td>
+      <td>${escapeHtml(entry.totalStock)}</td>
+      <td>${escapeHtml(entry.usedStock)}</td>
+      <td>${escapeHtml(entry.closingBalance)}</td>
+      <td>${escapeHtml(entry.waterSamplesCollected)}</td>
+      <td>${escapeHtml(entry.waterSamplesSent)}</td>
+      <td>${escapeHtml(entry.tclSuitable)}</td>
+      <td>${escapeHtml(entry.tclUnsuitable)}</td>
+      <td>${escapeHtml(entry.remark)}</td>
+    </tr>
+  `).join('');
+  const totals = [
+    sumWaterValues(waterTclReports.map((entry) => entry.previousBalance)),
+    sumWaterValues(waterTclReports.map((entry) => entry.receivedThisMonth)),
+    sumWaterValues(waterTclReports.map((entry) => entry.totalStock)),
+    sumWaterValues(waterTclReports.map((entry) => entry.usedStock)),
+    sumWaterValues(waterTclReports.map((entry) => entry.closingBalance)),
+    sumWaterValues(waterTclReports.map((entry) => entry.waterSamplesCollected)),
+    sumWaterValues(waterTclReports.map((entry) => entry.waterSamplesSent)),
+    sumWaterValues(waterTclReports.map((entry) => entry.tclSuitable)),
+    sumWaterValues(waterTclReports.map((entry) => entry.tclUnsuitable)),
+  ];
+  return `<!doctype html>
+    <html><head><meta charset="utf-8"><title>पाणी नमुने व ओ.टी. अहवाल - ${escapeHtml(monthLabel)}</title>
+    <style>
+      @page { size: A4 landscape; margin: 12mm; }
+      body { font-family: Arial, sans-serif; color: #172033; margin: 0; }
+      .top { display: flex; justify-content: space-between; align-items: flex-start; }
+      .center { text-align: center; flex: 1; }
+      .facility { font-size: 18px; font-weight: 700; }
+      .meta { font-size: 12px; margin-top: 5px; }
+      .month { font-size: 13px; font-weight: 700; min-width: 130px; text-align: right; }
+      h1 { font-size: 19px; text-align: center; margin: 20px 0 14px; }
+      table { border-collapse: collapse; width: 100%; font-size: 8.5px; }
+      th, td { border: 1px solid #6f7785; padding: 5px 3px; text-align: center; vertical-align: middle; }
+      th { background: #eef2ff; font-weight: 700; }
+      td:nth-child(2), td:nth-child(12) { text-align: left; }
+      .total-row td { background: #eef2ff; font-weight: 700; }
+      .signatures { display: flex; justify-content: space-between; margin-top: 42px; font-size: 12px; line-height: 1.7; }
+      .right { text-align: right; }
+    </style></head><body>
+      <div class="top">
+        <div style="width:130px"></div>
+        <div class="center">
+          <div class="facility">${escapeHtml(`प्राथमिक आरोग्य केंद्र ${profile.primaryHealthCenter || '—'}`)}</div>
+          <div class="meta">तालुका: ${escapeHtml(profile.taluka || '—')} &nbsp;&nbsp; जिल्हा: ${escapeHtml(profile.district || '—')}</div>
+          <div class="meta">उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
+        </div>
+        <div class="month">महिना: ${escapeHtml(monthLabel)}</div>
+      </div>
+      <h1>पाणी नमुने व ओ.टी. अहवाल</h1>
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">अ. नं.</th><th rowspan="2">गावाचे नाव</th><th rowspan="2">मागील<br>शिल्लक</th><th rowspan="2">चालू महिन्यात<br>मिळालेला साठा</th><th rowspan="2">एकूण<br>साठा</th><th rowspan="2">खर्च<br>साठा</th><th rowspan="2">महिन्याखेर<br>शिल्लक साठा</th><th colspan="2">पाणी नमुने</th><th colspan="2">ओ.टी.</th><th rowspan="2">शेरा</th>
+          </tr>
+          <tr><th>मा.</th><th>प्र.</th><th>योग्य</th><th>अयोग्य</th></tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="12">कोणतीही नोंद नाही</td></tr>'}</tbody>
+        <tfoot><tr class="total-row"><td colspan="2">एकूण</td>${totals.map((total) => `<td>${total}</td>`).join('')}<td></td></tr></tfoot>
+      </table>
+      <div class="signatures">
+        <div>सविनय सादर<br>वैद्यकीय अधिकारी<br>प्राथमिक आरोग्य केंद्र: ${escapeHtml(profile.primaryHealthCenter || '—')}</div>
+        <div class="right">नाव: ${escapeHtml(profile.name || '—')}<br>आरोग्य सेवक<br>उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
+      </div>
+    </body></html>`;
+}
+
+function buildLeprosyReportHtml({ profile, leprosyReports, monthLabel }: { profile: Profile; leprosyReports: LeprosyReportEntry[]; monthLabel: string }) {
+  const rows = leprosyReports.map((entry, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${escapeHtml(entry.personName)}</td>
+      <td>${escapeHtml(entry.age)}</td>
+      <td>${escapeHtml(entry.gender)}</td>
+      <td>${escapeHtml(entry.villageName)}</td>
+      <td>${escapeHtml(entry.spotCount === 'more-than-5' ? '५ पेक्षा जास्त' : entry.spotCount === '1-5' ? '१ ते ५' : '')}</td>
+      <td>${escapeHtml(entry.spotLocation)}</td>
+      <td>${escapeHtml(entry.searchDate)}</td>
+    </tr>
+  `).join('');
+  return `<!doctype html>
+    <html><head><meta charset="utf-8"><title>संशयीत कुष्ठरुग्ण अहवाल - ${escapeHtml(monthLabel)}</title>
+    <style>
+      @page { size: A4 landscape; margin: 16mm; }
+      body { font-family: Arial, sans-serif; color: #172033; margin: 0; }
+      .top { display: flex; justify-content: space-between; align-items: flex-start; }
+      .center { text-align: center; flex: 1; }
+      .facility { font-size: 18px; font-weight: 700; }
+      .meta { font-size: 12px; margin-top: 5px; }
+      .month { font-size: 13px; font-weight: 700; min-width: 130px; text-align: right; }
+      h1 { font-size: 20px; text-align: center; margin: 24px 0 16px; }
+      table { border-collapse: collapse; width: 100%; font-size: 10px; }
+      th, td { border: 1px solid #6f7785; padding: 7px 5px; text-align: center; vertical-align: middle; }
+      th { background: #eef2ff; font-weight: 700; }
+      td:nth-child(2), td:nth-child(5), td:nth-child(7) { text-align: left; }
+      .signatures { display: flex; justify-content: space-between; margin-top: 55px; font-size: 12px; line-height: 1.7; }
+      .right { text-align: right; }
+    </style></head><body>
+      <div class="top">
+        <div style="width:130px"></div>
+        <div class="center">
+          <div class="facility">${escapeHtml(`प्राथमिक आरोग्य केंद्र ${profile.primaryHealthCenter || '—'}`)}</div>
+          <div class="meta">तालुका: ${escapeHtml(profile.taluka || '—')} &nbsp;&nbsp; जिल्हा: ${escapeHtml(profile.district || '—')}</div>
+          <div class="meta">उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
+        </div>
+        <div class="month">${escapeHtml(monthLabel)}</div>
+      </div>
+      <h1>संशयीत कुष्ठरुग्ण अहवाल</h1>
+      <table><thead><tr>
+        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>चट्टे<br>१ ते ५ / ५ पेक्षा जास्त</th><th>चट्ट्याचे ठिकाण</th><th>शोधल्याचा दिनांक</th>
+      </tr></thead><tbody>${rows || '<tr><td colspan="8">कोणतीही नोंद नाही</td></tr>'}</tbody></table>
+      <div class="signatures">
+        <div>सविनय सादर<br>वैद्यकीय अधिकारी<br>प्राथमिक आरोग्य केंद्र: ${escapeHtml(profile.primaryHealthCenter || '—')}</div>
+        <div class="right">नाव: ${escapeHtml(profile.name || '—')}<br>आरोग्य सेवक<br>उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
+      </div>
+    </body></html>`;
 }
 
 function buildCataractReportHtml({ profile, cataractReports, monthLabel }: { profile: Profile; cataractReports: CataractReportEntry[]; monthLabel: string }) {
@@ -814,7 +1416,7 @@ function buildSputumReportHtml({ profile, sputumSampleReports, monthLabel }: { p
       </div>
       <h1>थुकी नमुने अहवाल</h1>
       <table><thead><tr>
-        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>थुकी नमुना घेतल्याचा दिनांक</th><th>थुकी नमुना तपासणीचा दिनांक</th><th>तपासणी करणाऱ्या कर्मचाऱ्याचे नाव</th><th>Sputum/CBNAAT</th>
+        <th>अ.नं.</th><th>रुग्णाचे नाव</th><th>वय</th><th>लिंग</th><th>गावाचे नाव</th><th>थुकी नमुना घेतल्याचा दिनांक</th><th>थुंकी नमुना तपासणीसाठी पाठवलेला दिनांक</th><th>शोधणाऱ्या कर्मचाऱ्याचे नाव</th><th>Sputum/CBNAAT</th>
       </tr></thead><tbody>${rows || '<tr><td colspan="9">कोणतीही नोंद नाही</td></tr>'}</tbody></table>
       <div class="signatures">
         <div>सविनय सादर<br>वैद्यकीय अधिकारी<br>प्राथमिक आरोग्य केंद्र: ${escapeHtml(profile.primaryHealthCenter || '—')}</div>
@@ -872,6 +1474,59 @@ function buildCataractSurgeryReportHtml({ profile, cataractSurgeryReports, month
         <div class="right">नाव: ${escapeHtml(profile.name || '—')}<br>आरोग्य सेवक<br>उपकेंद्र: ${escapeHtml(profile.subCenter || '—')}</div>
       </div>
     </body></html>`;
+}
+
+function bodyFromReportHtml(html: string) {
+  return html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1] || '';
+}
+
+function buildCombinedReportsHtml({
+  profile,
+  monthLabel,
+  deathReports,
+  cataractReports,
+  cataractSurgeryReports,
+  sputumSampleReports,
+  leprosyReports,
+  waterTclReports,
+}: {
+  profile: Profile;
+  monthLabel: string;
+  deathReports: DeathReportEntry[];
+  cataractReports: CataractReportEntry[];
+  cataractSurgeryReports: CataractSurgeryReportEntry[];
+  sputumSampleReports: SputumSampleReportEntry[];
+  leprosyReports: LeprosyReportEntry[];
+  waterTclReports: WaterTclReportEntry[];
+}) {
+  const pages = [
+    buildDeathReportHtml({ profile, deathReports, monthLabel }),
+    buildCataractReportHtml({ profile, cataractReports, monthLabel }),
+    buildCataractSurgeryReportHtml({ profile, cataractSurgeryReports, monthLabel }),
+    buildSputumReportHtml({ profile, sputumSampleReports, monthLabel }),
+    buildLeprosyReportHtml({ profile, leprosyReports, monthLabel }),
+    buildWaterTclReportHtml({ profile, waterTclReports, monthLabel }),
+  ].map(bodyFromReportHtml).join('<div class="report-page-break"></div>');
+  return `<!doctype html>
+    <html><head><meta charset="utf-8"><title>सहा राष्ट्रीय कार्यक्रमाचा आढावा - ${escapeHtml(monthLabel)}</title>
+    <style>
+      @page { size: A4 landscape; margin: 14mm; }
+      body { font-family: Arial, sans-serif; color: #172033; margin: 0; }
+      .report-page-break { page-break-after: always; }
+      .top { display: flex; justify-content: space-between; align-items: flex-start; }
+      .center { text-align: center; flex: 1; }
+      .facility { font-size: 18px; font-weight: 700; }
+      .meta { font-size: 12px; margin-top: 5px; }
+      .month { font-size: 13px; font-weight: 700; min-width: 130px; text-align: right; }
+      h1 { font-size: 20px; text-align: center; margin: 22px 0 15px; }
+      table { border-collapse: collapse; width: 100%; font-size: 9px; }
+      th, td { border: 1px solid #6f7785; padding: 6px 4px; text-align: center; vertical-align: middle; }
+      th { background: #eef2ff; font-weight: 700; }
+      td:nth-child(2), td:nth-child(5), td:nth-child(8), td:nth-child(9), td:nth-child(12) { text-align: left; }
+      .total-row td { background: #eef2ff; font-weight: 700; }
+      .signatures { display: flex; justify-content: space-between; margin-top: 48px; font-size: 12px; line-height: 1.7; }
+      .right { text-align: right; }
+    </style></head><body>${pages}</body></html>`;
 }
 
 const escapeHtml = (value: string) =>
@@ -940,6 +1595,14 @@ const styles = StyleSheet.create({
   sectionTitle: { fontFamily: 'Inter_700Bold', fontSize: 14, marginTop: 3 },
   sectionAddButton: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   reportPaper: { borderRadius: 19, borderWidth: 1, padding: 16, marginBottom: 18 },
+  reportMenu: { borderRadius: 19, borderWidth: 1, paddingHorizontal: 13, marginBottom: 18 },
+  reportMenuItem: { minHeight: 66, flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 10 },
+  reportMenuNumber: { width: 26, height: 26, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  reportMenuNumberText: { fontFamily: 'Inter_700Bold', fontSize: 11 },
+  reportMenuIcon: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  reportMenuTitle: { flex: 1, fontFamily: 'Inter_600SemiBold', fontSize: 12, lineHeight: 17 },
+  reportMenuCount: { minWidth: 25, height: 25, borderRadius: 8, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 5 },
+  reportMenuCountText: { fontFamily: 'Inter_700Bold', fontSize: 11 },
   paperTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   paperHeading: { flex: 1, paddingRight: 8 },
   facilityName: { fontFamily: 'Inter_700Bold', fontSize: 13 },
@@ -961,6 +1624,13 @@ const styles = StyleSheet.create({
   field: { marginBottom: 11 },
   fieldLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 10, marginBottom: 6 },
   fieldInput: { height: 42, borderWidth: 1, borderRadius: 11, paddingHorizontal: 11, fontFamily: 'Inter_400Regular', fontSize: 13 },
+  villageChoices: { gap: 7, marginBottom: 5 },
+  villageChoice: { minHeight: 42, borderRadius: 11, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11, gap: 8 },
+  villageChoiceText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
+  noVillagesNotice: { minHeight: 42, borderRadius: 11, paddingHorizontal: 11, paddingVertical: 9, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  noVillagesText: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 16 },
+  selectedVillageText: { fontFamily: 'Inter_600SemiBold', fontSize: 10, marginTop: 3, marginBottom: 2 },
+  genderChoices: { flexDirection: 'row', gap: 9 },
   eyeChoices: { flexDirection: 'row', gap: 9, marginBottom: 11 },
   eyeChoice: { flex: 1, minHeight: 42, borderRadius: 11, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 11, gap: 8 },
   eyeChoiceDot: { width: 15, height: 15, borderRadius: 8, borderWidth: 1.5 },
